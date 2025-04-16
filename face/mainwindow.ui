@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>人脸识别排座系统 - 考勤端</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="leftLayout">
+      <item>
+       <widget class="QLabel" name="cameraLabel">
+        <property name="minimumSize">
+         <size>
+          <width>640</width>
+          <height>480</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="text">
+         <string>摄像头预览</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="logEdit">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>150</height>
+         </size>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="placeholderText">
+         <string>系统日志</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="examRoomTab">
+       <attribute name="title">
+        <string>考场管理</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QGroupBox" name="examRoomGroup">
+          <property name="title">
+           <string>考场信息</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QLabel" name="examRoomLabel">
+               <property name="text">
+                <string>选择考场：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="examRoomSelector">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="loadExamRoomsButton">
+               <property name="text">
+                <string>刷新考场</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QLabel" name="examInfoLabel">
+             <property name="text">
+              <string>考场位置：| 时间：| 容量：</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="loadStudentsButton">
+             <property name="text">
+              <string>加载学生名单</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableWidget" name="studentListTable">
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>学号</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>姓名</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>座位号</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>考勤状态</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="attendanceModeCheckBox">
+          <property name="text">
+           <string>开启自动考勤模式</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="registerTab">
+       <attribute name="title">
+        <string>人脸注册</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QGroupBox" name="registerGroup">
+          <property name="title">
+           <string>用户注册</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="nameLabel">
+             <property name="text">
+              <string>姓名：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="nameEdit"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="idLabel">
+             <property name="text">
+              <string>ID：</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="idEdit"/>
+           </item>
+           <item row="2" column="1">
+            <widget class="QPushButton" name="registerButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>注册信息</string>
+             </property>
+             <property name="icon">
+              <iconset theme="user-add"/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="faceGroup">
+          <property name="title">
+           <string>人脸操作</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QPushButton" name="captureButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>采集人脸</string>
+             </property>
+             <property name="icon">
+              <iconset theme="camera"/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="recognizeButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>识别人脸</string>
+             </property>
+             <property name="icon">
+              <iconset theme="face-detection"/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="attendanceButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>签到</string>
+             </property>
+             <property name="icon">
+              <iconset theme="check"/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="viewRecordsButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>查看考勤记录</string>
+             </property>
+             <property name="icon">
+              <iconset theme="document-open"/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionSync"/>
+    <addaction name="actionViewRecords"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>帮助</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionExit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>关于</string>
+   </property>
+  </action>
+  <action name="actionViewRecords">
+   <property name="text">
+    <string>查看考勤记录</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionSync">
+   <property name="text">
+    <string>同步服务器数据</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

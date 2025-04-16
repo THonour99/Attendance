@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TeacherWidget</class>
+ <widget class="QWidget" name="TeacherWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>650</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>教师界面</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>教师管理面板</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="infoLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="nameLabel">
+       <property name="text">
+        <string>姓名: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="text">
+        <string>刷新数据</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="classTab">
+      <attribute name="title">
+       <string>班级管理</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="classesLayout">
+         <item>
+          <widget class="QLabel" name="classesLabel">
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>班级列表</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListView" name="classesListView"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addClassButton">
+           <property name="text">
+            <string>添加班级</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="studentsLayout">
+         <item>
+          <widget class="QLabel" name="studentsLabel">
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>班级学生</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="studentsTableView"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="studentButtonsLayout">
+           <item>
+            <widget class="QPushButton" name="addStudentButton">
+             <property name="text">
+              <string>添加学生</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="removeStudentButton">
+             <property name="text">
+              <string>移除学生</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="examTab">
+      <attribute name="title">
+       <string>考场管理</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <layout class="QVBoxLayout" name="examRoomsLayout">
+         <item>
+          <widget class="QLabel" name="examRoomsLabel">
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>考场列表</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListView" name="examRoomsListView"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addExamRoomButton">
+           <property name="text">
+            <string>添加考场</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="attendanceLayout">
+         <item>
+          <widget class="QLabel" name="attendanceLabel">
+           <property name="font">
+            <font>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>考勤情况</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="attendanceTableView"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="exportAttendanceButton">
+           <property name="text">
+            <string>导出考勤数据</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 
