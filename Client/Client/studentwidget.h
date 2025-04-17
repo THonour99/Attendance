@@ -41,6 +41,7 @@ private:
     QString userToken;
     QString userName;
     QString studentId;
+    bool hasRetryLoadSeat = false; // 座位信息重试标志
 
     void setupUI();
     void loadAttendanceRecords();

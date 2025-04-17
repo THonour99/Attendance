@@ -13,6 +13,7 @@
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QDebug>
+#include <QTimer>
 
 // 服务器地址
 const QString STUDENT_SERVER_URL = "http://localhost:8080";
@@ -36,6 +37,8 @@ StudentWidget::StudentWidget(QWidget *parent) :
             onPhotoUploadResponse(reply);
         } else if (endpoint.contains("/student/seat")) {
             onSeatInfoReceived(reply);
+        } else if (endpoint.contains("/student/examroom/seat")) {
+            onSeatInfoReceived(reply); // 也处理旧端点的响应
         } else if (endpoint.contains("/student/exam-info")) {
             onExamInfoReceived(reply);
         }
@@ -124,14 +127,25 @@ void StudentWidget::loadSeatInfo()
         return;
     }
     
-    // 准备座位信息请求
-    QUrl url(STUDENT_SERVER_URL + "/student/examroom/seat");
+    qDebug() << "正在请求学生座位信息...";
+    
+    // 修改为使用正确的座位信息API端点
+    QUrl url(STUDENT_SERVER_URL + "/student/seat");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
     // 发送请求
-    networkManager->get(request);
+    QNetworkReply* reply = networkManager->get(request);
+    
+    // 添加调试信息
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << "座位信息请求失败:" << reply->errorString() << "URL:" << url.toString();
+        } else {
+            qDebug() << "座位信息请求成功，等待响应处理...";
+        }
+    });
 }
 
 void StudentWidget::loadExamInfo()
@@ -394,6 +408,7 @@ void StudentWidget::onSeatInfoReceived(QNetworkReply *reply)
     if (reply->error() != QNetworkReply::NoError) {
         ui->seatInfoLabel->setText("座位信息: 获取失败 - " + reply->errorString());
         ui->examRoomInfoLabel->setText("考场: 获取失败");
+        qDebug() << "座位信息请求失败:" << reply->errorString() << "URL:" << reply->url().toString();
         reply->deleteLater();
         return;
     }
@@ -403,12 +418,15 @@ void StudentWidget::onSeatInfoReceived(QNetworkReply *reply)
     QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
     QJsonObject jsonObject = jsonResponse.object();
     
-    qDebug() << "座位信息响应:" << jsonResponse.toJson();
+    qDebug() << "座位信息响应:" << QString(responseData);
     
     // 检查响应状态
     if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
         if (jsonObject.contains("data") && !jsonObject["data"].isNull() && jsonObject["data"].isObject()) {
             QJsonObject data = jsonObject["data"].toObject();
+            qDebug() << "座位数据解析:" 
+                     << "包含examRoom:" << data.contains("examRoom") 
+                     << "包含seat:" << data.contains("seat");
             
             if (data.contains("examRoom") && data["examRoom"].isObject() && 
                 data.contains("seat") && data["seat"].isObject()) {
@@ -416,19 +434,49 @@ void StudentWidget::onSeatInfoReceived(QNetworkReply *reply)
                 QJsonObject examRoomObj = data["examRoom"].toObject();
                 QJsonObject seatObj = data["seat"].toObject();
                 
+                // 打印详细的座位和考场信息
+                qDebug() << "考场信息:" << QJsonDocument(examRoomObj).toJson();
+                qDebug() << "座位信息:" << QJsonDocument(seatObj).toJson();
+                
                 QString examRoomName = examRoomObj["name"].toString();
                 QString examRoomLocation = examRoomObj["location"].toString();
-                int seatNumber = seatObj["seatNumber"].toInt();
+                
+                // 尝试多种方式获取座位号
+                int seatNumber = 0;
+                if (seatObj.contains("seatNumber")) {
+                    seatNumber = seatObj["seatNumber"].toInt();
+                } else if (seatObj.contains("seatId")) {
+                    seatNumber = seatObj["seatId"].toInt();
+                }
+                
+                QString seatInfo = QString("座位号: %1").arg(seatNumber);
+                
+                // 如果有行列信息，添加到显示中
+                if (seatObj.contains("row") && seatObj.contains("column")) {
+                    int row = seatObj["row"].toInt();
+                    int column = seatObj["column"].toInt();
+                    seatInfo += QString(" (行:%1 列:%2)").arg(row).arg(column);
+                }
                 
                 ui->examRoomInfoLabel->setText(QString("考场: %1 (%2)").arg(examRoomName).arg(examRoomLocation));
-                ui->seatInfoLabel->setText(QString("座位号: %1").arg(seatNumber));
+                ui->seatInfoLabel->setText(seatInfo);
+                qDebug() << "座位信息显示成功:" << examRoomName << seatInfo;
             } else {
                 ui->examRoomInfoLabel->setText("考场: 数据格式错误");
                 ui->seatInfoLabel->setText("座位号: 数据格式错误");
+                qDebug() << "座位数据格式错误，无法正确解析examRoom或seat对象";
             }
         } else {
             ui->examRoomInfoLabel->setText("考场: 未分配");
             ui->seatInfoLabel->setText("座位号: 未分配");
+            qDebug() << "未找到座位数据或数据为空";
+            
+            // 尝试重新加载座位信息 - 在无数据的情况下尝试一次
+            if (!hasRetryLoadSeat) {
+                hasRetryLoadSeat = true;
+                QTimer::singleShot(1000, this, &StudentWidget::loadSeatInfo);
+                qDebug() << "尝试重新加载座位信息...";
+            }
         }
     } else {
         QString message = "获取失败";
@@ -437,6 +485,7 @@ void StudentWidget::onSeatInfoReceived(QNetworkReply *reply)
         }
         ui->examRoomInfoLabel->setText("考场: " + message);
         ui->seatInfoLabel->setText("座位号: " + message);
+        qDebug() << "座位请求状态不成功:" << message;
     }
     
     reply->deleteLater();

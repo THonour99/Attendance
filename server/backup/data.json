@@ -1,0 +1,2508 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin23",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "username": "teacher",
+      "password": "teacher123",
+      "role": "teacher",
+      "name": "测试教师"
+    },
+    {
+      "id": 3,
+      "username": "2023001",
+      "password": "student123",
+      "role": "student",
+      "name": "学生1"
+    },
+    {
+      "id": 4,
+      "username": "2023002",
+      "password": "student123",
+      "role": "student",
+      "name": "学生2"
+    },
+    {
+      "id": 5,
+      "username": "2023003",
+      "password": "student123",
+      "role": "student",
+      "name": "学生3"
+    },
+    {
+      "id": 6,
+      "username": "2023004",
+      "password": "student123",
+      "role": "student",
+      "name": "学生4"
+    },
+    {
+      "id": 7,
+      "username": "2023005",
+      "password": "student123",
+      "role": "student",
+      "name": "学生5"
+    },
+    {
+      "id": 8,
+      "username": "2023006",
+      "password": "student123",
+      "role": "student",
+      "name": "学生6"
+    },
+    {
+      "id": 9,
+      "username": "2023007",
+      "password": "student123",
+      "role": "student",
+      "name": "学生7"
+    },
+    {
+      "id": 10,
+      "username": "2023008",
+      "password": "student123",
+      "role": "student",
+      "name": "学生8"
+    },
+    {
+      "id": 11,
+      "username": "2023009",
+      "password": "student123",
+      "role": "student",
+      "name": "学生9"
+    },
+    {
+      "id": 12,
+      "username": "2023010",
+      "password": "student123",
+      "role": "student",
+      "name": "学生10"
+    },
+    {
+      "id": 13,
+      "username": "2023011",
+      "password": "student123",
+      "role": "student",
+      "name": "学生11"
+    },
+    {
+      "id": 14,
+      "username": "2023012",
+      "password": "student123",
+      "role": "student",
+      "name": "学生12"
+    },
+    {
+      "id": 15,
+      "username": "2023013",
+      "password": "student123",
+      "role": "student",
+      "name": "学生13"
+    },
+    {
+      "id": 16,
+      "username": "2023014",
+      "password": "student123",
+      "role": "student",
+      "name": "学生14"
+    },
+    {
+      "id": 17,
+      "username": "2023015",
+      "password": "student123",
+      "role": "student",
+      "name": "学生15"
+    },
+    {
+      "id": 18,
+      "username": "2023016",
+      "password": "student123",
+      "role": "student",
+      "name": "学生16"
+    },
+    {
+      "id": 19,
+      "username": "2023017",
+      "password": "student123",
+      "role": "student",
+      "name": "学生17"
+    },
+    {
+      "id": 20,
+      "username": "2023018",
+      "password": "student123",
+      "role": "student",
+      "name": "学生18"
+    },
+    {
+      "id": 21,
+      "username": "2023019",
+      "password": "student123",
+      "role": "student",
+      "name": "学生19"
+    },
+    {
+      "id": 22,
+      "username": "2023020",
+      "password": "student123",
+      "role": "student",
+      "name": "学生20"
+    },
+    {
+      "id": 23,
+      "username": "teacher1",
+      "password": "teacher123",
+      "role": "teacher",
+      "name": "教师1"
+    },
+    {
+      "id": 24,
+      "username": "teacher2",
+      "password": "teacher123",
+      "role": "teacher",
+      "name": "教师2"
+    },
+    {
+      "id": 25,
+      "username": "teacher3",
+      "password": "teacher123",
+      "role": "teacher",
+      "name": "教师3"
+    },
+    {
+      "id": 26,
+      "username": "teacher4",
+      "password": "teacher123",
+      "role": "teacher",
+      "name": "教师4"
+    },
+    {
+      "id": 27,
+      "username": "teacher5",
+      "password": "teacher123",
+      "role": "teacher",
+      "name": "教师5"
+    },
+    {
+      "id": 28,
+      "username": "20230101",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-01"
+    },
+    {
+      "id": 29,
+      "username": "20230102",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-02"
+    },
+    {
+      "id": 30,
+      "username": "20230103",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-03"
+    },
+    {
+      "id": 31,
+      "username": "20230104",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-04"
+    },
+    {
+      "id": 32,
+      "username": "20230105",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-05"
+    },
+    {
+      "id": 33,
+      "username": "20230106",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-06"
+    },
+    {
+      "id": 34,
+      "username": "20230107",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-07"
+    },
+    {
+      "id": 35,
+      "username": "20230108",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-08"
+    },
+    {
+      "id": 36,
+      "username": "20230109",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-09"
+    },
+    {
+      "id": 37,
+      "username": "20230110",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-10"
+    },
+    {
+      "id": 38,
+      "username": "20230111",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-11"
+    },
+    {
+      "id": 39,
+      "username": "20230112",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-12"
+    },
+    {
+      "id": 40,
+      "username": "20230113",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-13"
+    },
+    {
+      "id": 41,
+      "username": "20230114",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-14"
+    },
+    {
+      "id": 42,
+      "username": "20230115",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-15"
+    },
+    {
+      "id": 43,
+      "username": "20230116",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-16"
+    },
+    {
+      "id": 44,
+      "username": "20230117",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-17"
+    },
+    {
+      "id": 45,
+      "username": "20230118",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-18"
+    },
+    {
+      "id": 46,
+      "username": "20230119",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-19"
+    },
+    {
+      "id": 47,
+      "username": "20230120",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202301-20"
+    },
+    {
+      "id": 48,
+      "username": "20230201",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-01"
+    },
+    {
+      "id": 49,
+      "username": "20230202",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-02"
+    },
+    {
+      "id": 50,
+      "username": "20230203",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-03"
+    },
+    {
+      "id": 51,
+      "username": "20230204",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-04"
+    },
+    {
+      "id": 52,
+      "username": "20230205",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-05"
+    },
+    {
+      "id": 53,
+      "username": "20230206",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-06"
+    },
+    {
+      "id": 54,
+      "username": "20230207",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-07"
+    },
+    {
+      "id": 55,
+      "username": "20230208",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-08"
+    },
+    {
+      "id": 56,
+      "username": "20230209",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-09"
+    },
+    {
+      "id": 57,
+      "username": "20230210",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-10"
+    },
+    {
+      "id": 58,
+      "username": "20230211",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-11"
+    },
+    {
+      "id": 59,
+      "username": "20230212",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-12"
+    },
+    {
+      "id": 60,
+      "username": "20230213",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-13"
+    },
+    {
+      "id": 61,
+      "username": "20230214",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-14"
+    },
+    {
+      "id": 62,
+      "username": "20230215",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-15"
+    },
+    {
+      "id": 63,
+      "username": "20230216",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-16"
+    },
+    {
+      "id": 64,
+      "username": "20230217",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-17"
+    },
+    {
+      "id": 65,
+      "username": "20230218",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-18"
+    },
+    {
+      "id": 66,
+      "username": "20230219",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-19"
+    },
+    {
+      "id": 67,
+      "username": "20230220",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202302-20"
+    },
+    {
+      "id": 68,
+      "username": "20230301",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-01"
+    },
+    {
+      "id": 69,
+      "username": "20230302",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-02"
+    },
+    {
+      "id": 70,
+      "username": "20230303",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-03"
+    },
+    {
+      "id": 71,
+      "username": "20230304",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-04"
+    },
+    {
+      "id": 72,
+      "username": "20230305",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-05"
+    },
+    {
+      "id": 73,
+      "username": "20230306",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-06"
+    },
+    {
+      "id": 74,
+      "username": "20230307",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-07"
+    },
+    {
+      "id": 75,
+      "username": "20230308",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-08"
+    },
+    {
+      "id": 76,
+      "username": "20230309",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-09"
+    },
+    {
+      "id": 77,
+      "username": "20230310",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-10"
+    },
+    {
+      "id": 78,
+      "username": "20230311",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-11"
+    },
+    {
+      "id": 79,
+      "username": "20230312",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-12"
+    },
+    {
+      "id": 80,
+      "username": "20230313",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-13"
+    },
+    {
+      "id": 81,
+      "username": "20230314",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-14"
+    },
+    {
+      "id": 82,
+      "username": "20230315",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-15"
+    },
+    {
+      "id": 83,
+      "username": "20230316",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-16"
+    },
+    {
+      "id": 84,
+      "username": "20230317",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-17"
+    },
+    {
+      "id": 85,
+      "username": "20230318",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-18"
+    },
+    {
+      "id": 86,
+      "username": "20230319",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-19"
+    },
+    {
+      "id": 87,
+      "username": "20230320",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202303-20"
+    },
+    {
+      "id": 88,
+      "username": "20230401",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-01"
+    },
+    {
+      "id": 89,
+      "username": "20230402",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-02"
+    },
+    {
+      "id": 90,
+      "username": "20230403",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-03"
+    },
+    {
+      "id": 91,
+      "username": "20230404",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-04"
+    },
+    {
+      "id": 92,
+      "username": "20230405",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-05"
+    },
+    {
+      "id": 93,
+      "username": "20230406",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-06"
+    },
+    {
+      "id": 94,
+      "username": "20230407",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-07"
+    },
+    {
+      "id": 95,
+      "username": "20230408",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-08"
+    },
+    {
+      "id": 96,
+      "username": "20230409",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-09"
+    },
+    {
+      "id": 97,
+      "username": "20230410",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-10"
+    },
+    {
+      "id": 98,
+      "username": "20230411",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-11"
+    },
+    {
+      "id": 99,
+      "username": "20230412",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-12"
+    },
+    {
+      "id": 100,
+      "username": "20230413",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-13"
+    },
+    {
+      "id": 101,
+      "username": "20230414",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-14"
+    },
+    {
+      "id": 102,
+      "username": "20230415",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-15"
+    },
+    {
+      "id": 103,
+      "username": "20230416",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-16"
+    },
+    {
+      "id": 104,
+      "username": "20230417",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-17"
+    },
+    {
+      "id": 105,
+      "username": "20230418",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-18"
+    },
+    {
+      "id": 106,
+      "username": "20230419",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-19"
+    },
+    {
+      "id": 107,
+      "username": "20230420",
+      "password": "student123",
+      "role": "student",
+      "name": "学生202304-20"
+    }
+  ],
+  "classes": [
+    {
+      "id": 1,
+      "className": "计算机科学2023级1班",
+      "location": "教学楼A101",
+      "teacher": "教师1"
+    },
+    {
+      "id": 2,
+      "className": "计算机科学2023级2班",
+      "location": "教学楼B102",
+      "teacher": "教师2"
+    },
+    {
+      "id": 3,
+      "className": "计算机科学2023级3班",
+      "location": "教学楼C103",
+      "teacher": "教师3"
+    },
+    {
+      "id": 4,
+      "className": "计算机科学2023级4班",
+      "location": "教学楼D104",
+      "teacher": "教师4"
+    }
+  ],
+  "teacherClasses": [
+    {
+      "teacherId": 2,
+      "classIds": [
+        1,
+        2
+      ]
+    },
+    {
+      "teacherId": 23,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "teacherId": 24,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "teacherId": 25,
+      "classIds": [
+        4
+      ]
+    }
+  ],
+  "studentClasses": [
+    {
+      "studentId": 3,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 4,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 5,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 6,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 7,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 8,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 9,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 10,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 11,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 12,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 13,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 14,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 15,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 16,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 17,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 18,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 19,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 20,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 21,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 22,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 28,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 29,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 30,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 31,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 32,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 33,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 34,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 35,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 36,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 37,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 38,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 39,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 40,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 41,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 42,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 43,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 44,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 45,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 46,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 47,
+      "classIds": [
+        1
+      ]
+    },
+    {
+      "studentId": 48,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 49,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 50,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 51,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 52,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 53,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 54,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 55,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 56,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 57,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 58,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 59,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 60,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 61,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 62,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 63,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 64,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 65,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 66,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 67,
+      "classIds": [
+        2
+      ]
+    },
+    {
+      "studentId": 68,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 69,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 70,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 71,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 72,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 73,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 74,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 75,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 76,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 77,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 78,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 79,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 80,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 81,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 82,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 83,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 84,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 85,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 86,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 87,
+      "classIds": [
+        3
+      ]
+    },
+    {
+      "studentId": 88,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 89,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 90,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 91,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 92,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 93,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 94,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 95,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 96,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 97,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 98,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 99,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 100,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 101,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 102,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 103,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 104,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 105,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 106,
+      "classIds": [
+        4
+      ]
+    },
+    {
+      "studentId": 107,
+      "classIds": [
+        4
+      ]
+    }
+  ],
+  "classStudents": {
+    "1": [
+      {
+        "id": 3,
+        "name": "学生1",
+        "studentId": "2023001",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 4,
+        "name": "学生2",
+        "studentId": "2023002",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 5,
+        "name": "学生3",
+        "studentId": "2023003",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 6,
+        "name": "学生4",
+        "studentId": "2023004",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 7,
+        "name": "学生5",
+        "studentId": "2023005",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 8,
+        "name": "学生6",
+        "studentId": "2023006",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 9,
+        "name": "学生7",
+        "studentId": "2023007",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 10,
+        "name": "学生8",
+        "studentId": "2023008",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 11,
+        "name": "学生9",
+        "studentId": "2023009",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 12,
+        "name": "学生10",
+        "studentId": "2023010",
+        "className": "计算机科学2023级1班"
+      },
+      {
+        "id": 28,
+        "studentId": "20230101",
+        "name": "学生202301-01",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 29,
+        "studentId": "20230102",
+        "name": "学生202301-02",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 30,
+        "studentId": "20230103",
+        "name": "学生202301-03",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 31,
+        "studentId": "20230104",
+        "name": "学生202301-04",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 32,
+        "studentId": "20230105",
+        "name": "学生202301-05",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 33,
+        "studentId": "20230106",
+        "name": "学生202301-06",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 34,
+        "studentId": "20230107",
+        "name": "学生202301-07",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 35,
+        "studentId": "20230108",
+        "name": "学生202301-08",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 36,
+        "studentId": "20230109",
+        "name": "学生202301-09",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 37,
+        "studentId": "20230110",
+        "name": "学生202301-10",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 38,
+        "studentId": "20230111",
+        "name": "学生202301-11",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 39,
+        "studentId": "20230112",
+        "name": "学生202301-12",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 40,
+        "studentId": "20230113",
+        "name": "学生202301-13",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 41,
+        "studentId": "20230114",
+        "name": "学生202301-14",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 42,
+        "studentId": "20230115",
+        "name": "学生202301-15",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 43,
+        "studentId": "20230116",
+        "name": "学生202301-16",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 44,
+        "studentId": "20230117",
+        "name": "学生202301-17",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 45,
+        "studentId": "20230118",
+        "name": "学生202301-18",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 46,
+        "studentId": "20230119",
+        "name": "学生202301-19",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 47,
+        "studentId": "20230120",
+        "name": "学生202301-20",
+        "gender": "女",
+        "photoStatus": "none"
+      }
+    ],
+    "2": [
+      {
+        "id": 13,
+        "name": "学生11",
+        "studentId": "2023011",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 14,
+        "name": "学生12",
+        "studentId": "2023012",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 15,
+        "name": "学生13",
+        "studentId": "2023013",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 16,
+        "name": "学生14",
+        "studentId": "2023014",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 17,
+        "name": "学生15",
+        "studentId": "2023015",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 18,
+        "name": "学生16",
+        "studentId": "2023016",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 19,
+        "name": "学生17",
+        "studentId": "2023017",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 20,
+        "name": "学生18",
+        "studentId": "2023018",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 21,
+        "name": "学生19",
+        "studentId": "2023019",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 22,
+        "name": "学生20",
+        "studentId": "2023020",
+        "className": "计算机科学2023级2班"
+      },
+      {
+        "id": 48,
+        "studentId": "20230201",
+        "name": "学生202302-01",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 49,
+        "studentId": "20230202",
+        "name": "学生202302-02",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 50,
+        "studentId": "20230203",
+        "name": "学生202302-03",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 51,
+        "studentId": "20230204",
+        "name": "学生202302-04",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 52,
+        "studentId": "20230205",
+        "name": "学生202302-05",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 53,
+        "studentId": "20230206",
+        "name": "学生202302-06",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 54,
+        "studentId": "20230207",
+        "name": "学生202302-07",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 55,
+        "studentId": "20230208",
+        "name": "学生202302-08",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 56,
+        "studentId": "20230209",
+        "name": "学生202302-09",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 57,
+        "studentId": "20230210",
+        "name": "学生202302-10",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 58,
+        "studentId": "20230211",
+        "name": "学生202302-11",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 59,
+        "studentId": "20230212",
+        "name": "学生202302-12",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 60,
+        "studentId": "20230213",
+        "name": "学生202302-13",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 61,
+        "studentId": "20230214",
+        "name": "学生202302-14",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 62,
+        "studentId": "20230215",
+        "name": "学生202302-15",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 63,
+        "studentId": "20230216",
+        "name": "学生202302-16",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 64,
+        "studentId": "20230217",
+        "name": "学生202302-17",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 65,
+        "studentId": "20230218",
+        "name": "学生202302-18",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 66,
+        "studentId": "20230219",
+        "name": "学生202302-19",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 67,
+        "studentId": "20230220",
+        "name": "学生202302-20",
+        "gender": "女",
+        "photoStatus": "none"
+      }
+    ],
+    "3": [
+      {
+        "id": 68,
+        "studentId": "20230301",
+        "name": "学生202303-01",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 69,
+        "studentId": "20230302",
+        "name": "学生202303-02",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 70,
+        "studentId": "20230303",
+        "name": "学生202303-03",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 71,
+        "studentId": "20230304",
+        "name": "学生202303-04",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 72,
+        "studentId": "20230305",
+        "name": "学生202303-05",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 73,
+        "studentId": "20230306",
+        "name": "学生202303-06",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 74,
+        "studentId": "20230307",
+        "name": "学生202303-07",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 75,
+        "studentId": "20230308",
+        "name": "学生202303-08",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 76,
+        "studentId": "20230309",
+        "name": "学生202303-09",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 77,
+        "studentId": "20230310",
+        "name": "学生202303-10",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 78,
+        "studentId": "20230311",
+        "name": "学生202303-11",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 79,
+        "studentId": "20230312",
+        "name": "学生202303-12",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 80,
+        "studentId": "20230313",
+        "name": "学生202303-13",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 81,
+        "studentId": "20230314",
+        "name": "学生202303-14",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 82,
+        "studentId": "20230315",
+        "name": "学生202303-15",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 83,
+        "studentId": "20230316",
+        "name": "学生202303-16",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 84,
+        "studentId": "20230317",
+        "name": "学生202303-17",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 85,
+        "studentId": "20230318",
+        "name": "学生202303-18",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 86,
+        "studentId": "20230319",
+        "name": "学生202303-19",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 87,
+        "studentId": "20230320",
+        "name": "学生202303-20",
+        "gender": "女",
+        "photoStatus": "none"
+      }
+    ],
+    "4": [
+      {
+        "id": 88,
+        "studentId": "20230401",
+        "name": "学生202304-01",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 89,
+        "studentId": "20230402",
+        "name": "学生202304-02",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 90,
+        "studentId": "20230403",
+        "name": "学生202304-03",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 91,
+        "studentId": "20230404",
+        "name": "学生202304-04",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 92,
+        "studentId": "20230405",
+        "name": "学生202304-05",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 93,
+        "studentId": "20230406",
+        "name": "学生202304-06",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 94,
+        "studentId": "20230407",
+        "name": "学生202304-07",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 95,
+        "studentId": "20230408",
+        "name": "学生202304-08",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 96,
+        "studentId": "20230409",
+        "name": "学生202304-09",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 97,
+        "studentId": "20230410",
+        "name": "学生202304-10",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 98,
+        "studentId": "20230411",
+        "name": "学生202304-11",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 99,
+        "studentId": "20230412",
+        "name": "学生202304-12",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 100,
+        "studentId": "20230413",
+        "name": "学生202304-13",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 101,
+        "studentId": "20230414",
+        "name": "学生202304-14",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 102,
+        "studentId": "20230415",
+        "name": "学生202304-15",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 103,
+        "studentId": "20230416",
+        "name": "学生202304-16",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 104,
+        "studentId": "20230417",
+        "name": "学生202304-17",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 105,
+        "studentId": "20230418",
+        "name": "学生202304-18",
+        "gender": "女",
+        "photoStatus": "none"
+      },
+      {
+        "id": 106,
+        "studentId": "20230419",
+        "name": "学生202304-19",
+        "gender": "男",
+        "photoStatus": "none"
+      },
+      {
+        "id": 107,
+        "studentId": "20230420",
+        "name": "学生202304-20",
+        "gender": "女",
+        "photoStatus": "none"
+      }
+    ]
+  },
+  "examRooms": [
+    {
+      "id": 1,
+      "name": "数据结构期末考试",
+      "location": "教学楼A201",
+      "capacity": 40,
+      "rows": 5,
+      "columns": 8,
+      "examDate": "2023-12-25",
+      "examTime": "9:00-11:00",
+      "teacherId": 2
+    },
+    {
+      "id": 2,
+      "name": "计算机原理期末考试",
+      "location": "教学楼B202",
+      "capacity": 50,
+      "rows": 5,
+      "columns": 9,
+      "examDate": "2023-12-26",
+      "examTime": "11:00-13:00",
+      "teacherId": 23
+    },
+    {
+      "id": 3,
+      "name": "C++程序设计期末考试",
+      "location": "教学楼C203",
+      "capacity": 60,
+      "rows": 6,
+      "columns": 10,
+      "examDate": "2023-12-27",
+      "examTime": "13:00-15:00",
+      "teacherId": 24
+    }
+  ],
+  "examRoomClasses": {
+    "1": [
+      1,
+      2
+    ],
+    "2": [
+      2,
+      3
+    ],
+    "3": [
+      3,
+      4
+    ]
+  },
+  "studentPhotos": {
+    "undefined": {
+      "status": "uploaded",
+      "uploadedAt": "2025-04-17T09:34:49.459Z",
+      "photoPath": "uploads/photos/undefined.jpg"
+    }
+  },
+  "examRoomSeats": {
+    "1": {
+      "arrangementType": "random",
+      "seats": [
+        {
+          "seatNumber": 1,
+          "studentId": "2023017",
+          "studentName": "学生17",
+          "classId": 2
+        },
+        {
+          "seatNumber": 2,
+          "studentId": "2023003",
+          "studentName": "学生3",
+          "classId": 1
+        },
+        {
+          "seatNumber": 3,
+          "studentId": "2023005",
+          "studentName": "学生5",
+          "classId": 1
+        },
+        {
+          "seatNumber": 4,
+          "studentId": "2023010",
+          "studentName": "学生10",
+          "classId": 1
+        },
+        {
+          "seatNumber": 5,
+          "studentId": "2023020",
+          "studentName": "学生20",
+          "classId": 2
+        },
+        {
+          "seatNumber": 6,
+          "studentId": "2023013",
+          "studentName": "学生13",
+          "classId": 2
+        },
+        {
+          "seatNumber": 7,
+          "studentId": "2023011",
+          "studentName": "学生11",
+          "classId": 2
+        },
+        {
+          "seatNumber": 8,
+          "studentId": "2023008",
+          "studentName": "学生8",
+          "classId": 1
+        },
+        {
+          "seatNumber": 9,
+          "studentId": "2023002",
+          "studentName": "学生2",
+          "classId": 1
+        },
+        {
+          "seatNumber": 10,
+          "studentId": "2023014",
+          "studentName": "学生14",
+          "classId": 2
+        },
+        {
+          "seatNumber": 11,
+          "studentId": "2023018",
+          "studentName": "学生18",
+          "classId": 2
+        },
+        {
+          "seatNumber": 12,
+          "studentId": "2023009",
+          "studentName": "学生9",
+          "classId": 1
+        },
+        {
+          "seatNumber": 13,
+          "studentId": "2023004",
+          "studentName": "学生4",
+          "classId": 1
+        },
+        {
+          "seatNumber": 14,
+          "studentId": "2023019",
+          "studentName": "学生19",
+          "classId": 2
+        },
+        {
+          "seatNumber": 15,
+          "studentId": "2023015",
+          "studentName": "学生15",
+          "classId": 2
+        },
+        {
+          "seatNumber": 16,
+          "studentId": "2023016",
+          "studentName": "学生16",
+          "classId": 2
+        },
+        {
+          "seatNumber": 17,
+          "studentId": "2023006",
+          "studentName": "学生6",
+          "classId": 1
+        },
+        {
+          "seatNumber": 18,
+          "studentId": "2023001",
+          "studentName": "学生1",
+          "classId": 1
+        },
+        {
+          "seatNumber": 19,
+          "studentId": "2023012",
+          "studentName": "学生12",
+          "classId": 2
+        },
+        {
+          "seatNumber": 20,
+          "studentId": "2023007",
+          "studentName": "学生7",
+          "classId": 1
+        }
+      ],
+      "createdAt": "2025-04-17T09:34:49.457Z"
+    },
+    "2": {
+      "arrangementType": "random",
+      "seats": [
+        {
+          "seatNumber": 1,
+          "studentId": "2023014",
+          "studentName": "学生14",
+          "classId": 2
+        },
+        {
+          "seatNumber": 2,
+          "studentId": "2023019",
+          "studentName": "学生19",
+          "classId": 2
+        },
+        {
+          "seatNumber": 3,
+          "studentId": "2023020",
+          "studentName": "学生20",
+          "classId": 2
+        },
+        {
+          "seatNumber": 4,
+          "studentId": "2023018",
+          "studentName": "学生18",
+          "classId": 2
+        },
+        {
+          "seatNumber": 5,
+          "studentId": "2023013",
+          "studentName": "学生13",
+          "classId": 2
+        },
+        {
+          "seatNumber": 6,
+          "studentId": "2023011",
+          "studentName": "学生11",
+          "classId": 2
+        },
+        {
+          "seatNumber": 7,
+          "studentId": "2023016",
+          "studentName": "学生16",
+          "classId": 2
+        },
+        {
+          "seatNumber": 8,
+          "studentId": "2023015",
+          "studentName": "学生15",
+          "classId": 2
+        },
+        {
+          "seatNumber": 9,
+          "studentId": "2023017",
+          "studentName": "学生17",
+          "classId": 2
+        },
+        {
+          "seatNumber": 10,
+          "studentId": "2023012",
+          "studentName": "学生12",
+          "classId": 2
+        }
+      ],
+      "createdAt": "2025-04-17T09:34:49.459Z"
+    }
+  },
+  "photoRequests": {
+    "1": {
+      "requestedBy": 2,
+      "requestedAt": "2025-04-17T09:34:49.459Z",
+      "status": "requested"
+    },
+    "2": {
+      "requestedBy": 2,
+      "requestedAt": "2025-04-17T09:34:49.459Z",
+      "status": "requested"
+    }
+  },
+  "attendance": {
+    "1744882489459": {
+      "examRoomId": 1,
+      "date": "2025-04-17T09:34:49.459Z",
+      "records": [
+        {
+          "studentId": "2023017",
+          "studentName": "学生17",
+          "seatNumber": 1,
+          "status": "absent",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023003",
+          "studentName": "学生3",
+          "seatNumber": 2,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023005",
+          "studentName": "学生5",
+          "seatNumber": 3,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023010",
+          "studentName": "学生10",
+          "seatNumber": 4,
+          "status": "absent",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023020",
+          "studentName": "学生20",
+          "seatNumber": 5,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023013",
+          "studentName": "学生13",
+          "seatNumber": 6,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023011",
+          "studentName": "学生11",
+          "seatNumber": 7,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023008",
+          "studentName": "学生8",
+          "seatNumber": 8,
+          "status": "absent",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023002",
+          "studentName": "学生2",
+          "seatNumber": 9,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023014",
+          "studentName": "学生14",
+          "seatNumber": 10,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023018",
+          "studentName": "学生18",
+          "seatNumber": 11,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023009",
+          "studentName": "学生9",
+          "seatNumber": 12,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023004",
+          "studentName": "学生4",
+          "seatNumber": 13,
+          "status": "absent",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023019",
+          "studentName": "学生19",
+          "seatNumber": 14,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023015",
+          "studentName": "学生15",
+          "seatNumber": 15,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023016",
+          "studentName": "学生16",
+          "seatNumber": 16,
+          "status": "absent",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023006",
+          "studentName": "学生6",
+          "seatNumber": 17,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023001",
+          "studentName": "学生1",
+          "seatNumber": 18,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023012",
+          "studentName": "学生12",
+          "seatNumber": 19,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        },
+        {
+          "studentId": "2023007",
+          "studentName": "学生7",
+          "seatNumber": 20,
+          "status": "present",
+          "recordedAt": "2025-04-17T09:34:49.459Z"
+        }
+      ]
+    }
+  },
+  "attendanceRecords": []
+}

@@ -66,8 +66,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// 全局数据变量
+let users = [];
+let classes = [];
+let teacherClasses = [];
+let studentClasses = [];
+let classStudents = {}; 
+let examRooms = [];
+let examRoomClasses = {};
+let examRoomSeats = {};
+let studentPhotos = {};
+let attendanceRecords = [];
+let studentsMap = new Map();
+let data = {}; // 存储完整数据
+
 // 初始化数据
-let users = [
+// 原有的用户数据
+users = [
     { id: 1, username: 'admin', password: 'admin123', role: 'admin' },
     { id: 2, username: 'teacher', password: 'teacher123', role: 'teacher' },
     { id: 3, username: 'operator', password: 'operator123', role: 'operator' },
@@ -81,19 +96,19 @@ let users = [
 ];
 
 // 添加模拟班级数据
-let classes = [
+classes = [
     { id: 1, className: '计算机科学与技术1班', teacher: '教师1', location: '教学楼A栋101' },
     { id: 2, className: '软件工程2班', teacher: '教师2', location: '教学楼B栋203' },
     { id: 3, className: '人工智能3班', teacher: '教师3', location: '教学楼C栋305' }
 ];
 
 // 为教师分配班级
-let teacherClasses = [
+teacherClasses = [
     { teacherId: 2, classIds: [1, 2] } // teacher用户管理班级1和2
 ];
 
 // 为学生分配班级
-let studentClasses = [
+studentClasses = [
     { studentId: 3, classIds: [1, 3] }, // operator用户(作为学生)属于班级1和3
     { studentId: 4, classIds: [1] },    // 学生1属于班级1
     { studentId: 5, classIds: [1] },    // 学生2属于班级1
@@ -104,7 +119,7 @@ let studentClasses = [
 ];
 
 // 班级学生名单
-let classStudents = {
+classStudents = {
     1: [
         { id: 101, name: '学生1', studentId: '2023100001', className: '计算机科学与技术1班' },
         { id: 102, name: '学生2', studentId: '2023100002', className: '计算机科学与技术1班' }
@@ -119,7 +134,7 @@ let classStudents = {
     ]
 };
 
-let examRooms = [
+examRooms = [
     { 
         id: 1, 
         name: '计算机学院期末考试 - 教学楼A101', 
@@ -147,13 +162,13 @@ let examRooms = [
 ];
 
 // 存储考场与班级的关联关系
-let examRoomClasses = {};
+examRoomClasses = {};
 
 // 存储学生照片信息
-let studentPhotos = {};
+studentPhotos = {};
 
 // 存储考场的座位安排
-let examRoomSeats = {};
+examRoomSeats = {};
 
 // 生成模拟学生数据
 function generateStudents(examRoomId, count) {
@@ -171,19 +186,19 @@ function generateStudents(examRoomId, count) {
 }
 
 // 为每个考场生成学生
-let studentsMap = new Map();
+studentsMap = new Map();
 examRooms.forEach(room => {
     studentsMap.set(room.id, generateStudents(room.id, room.capacity / 2)); // 生成一半容量的学生
 });
 
 // 考勤记录
-let attendanceRecords = [];
+attendanceRecords = [];
 
 // 数据持久化函数
 function saveData() {
     try {
         // 准备要保存的数据
-        const data = {
+        data = {
             users,
             classes,
             teacherClasses,
@@ -220,7 +235,7 @@ function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
             const fileData = fs.readFileSync(DATA_FILE, 'utf8');
-            const data = JSON.parse(fileData);
+            data = JSON.parse(fileData);
             
             // 恢复数据
             users = data.users || users;
@@ -235,14 +250,22 @@ function loadData() {
             examRoomSeats = data.examRoomSeats || {};
             
             // 恢复studentsMap
+            studentsMap = new Map();
+            
             if (data.studentsMap) {
-                studentsMap = new Map();
                 Object.keys(data.studentsMap).forEach(key => {
-                    studentsMap.set(key, data.studentsMap[key]);
+                    // 确保数组不为空
+                    if (data.studentsMap[key] && Array.isArray(data.studentsMap[key])) {
+                        studentsMap.set(parseInt(key), data.studentsMap[key]);
+                        console.log(`加载考场ID=${key}的学生数据: ${data.studentsMap[key].length}条记录`);
+                    }
                 });
+            } else {
+                console.log('数据文件中缺少studentsMap字段，将使用默认空Map');
             }
             
             console.log(`从 ${DATA_FILE} 加载了数据, 最后更新: ${data.lastUpdate || '未知'}`);
+            console.log(`加载了 ${Object.keys(data.studentsMap || {}).length} 个考场的学生数据`);
             return true;
         } else {
             console.log('数据文件不存在，初始化默认数据');
@@ -720,20 +743,51 @@ app.delete('/teacher/classes/:classId/students/:studentId', authenticateToken, (
 app.get('/teacher/examrooms/:examRoomId/attendance', authenticateToken, (req, res) => {
     const { examRoomId } = req.params;
     
+    console.log(`获取考场ID=${examRoomId}的考勤信息`);
+    
     // 获取考场信息
     const examRoom = examRooms.find(e => e.id === parseInt(examRoomId));
     if (!examRoom) {
+        console.log(`考场ID=${examRoomId}不存在`);
         return res.status(404).json({ 
             status: 'error', 
             message: '考场不存在' 
         });
     }
     
+    console.log(`找到考场: ${examRoom.name}`);
+    
+    // 确保studentsMap正确初始化
+    if (!studentsMap) {
+        console.log('studentsMap未初始化，正在创建新的Map');
+        studentsMap = new Map();
+    }
+    
     // 获取考勤记录
     const examAttendance = attendanceRecords.filter(record => record.examRoomId === parseInt(examRoomId));
+    console.log(`找到${examAttendance.length}条考勤记录`);
     
-    // 获取考场学生
-    const students = studentsMap.get(parseInt(examRoomId)) || [];
+    // 获取考场学生 - 先尝试数字key
+    let students = studentsMap.get(parseInt(examRoomId));
+    
+    // 如果没有找到，尝试字符串key
+    if (!students) {
+        students = studentsMap.get(examRoomId);
+    }
+    
+    // 如果仍然没有，尝试从序列化的studentsMap中获取
+    if (!students && data && data.studentsMap && data.studentsMap[examRoomId]) {
+        students = data.studentsMap[examRoomId];
+        console.log(`从序列化数据中获取学生数据: ${students.length}条记录`);
+    }
+    
+    // 如果仍然找不到，使用空数组
+    if (!students) {
+        console.log(`考场ID=${examRoomId}没有找到学生数据，检查data.studentsMap:`, Object.keys(data.studentsMap || {}));
+        students = [];
+    } else {
+        console.log(`找到${students.length}名学生`);
+    }
     
     // 组合学生和考勤信息
     const attendanceData = students.map(student => {
@@ -743,10 +797,12 @@ app.get('/teacher/examrooms/:examRoomId/attendance', authenticateToken, (req, re
             id: student.id,
             studentId: student.studentId,
             studentName: student.name,
-            status: student.attendanceStatus,
+            status: student.attendanceStatus || '未到',
             checkInTime: record ? record.time : null
         };
     });
+    
+    console.log(`返回${attendanceData.length}条考勤数据`);
     
     res.json({
         status: 'success',
@@ -1285,19 +1341,19 @@ app.post('/teacher/examrooms/:examRoomId/seats', authenticateToken, (req, res) =
     });
     
     // 根据排座方式安排座位
-    let seats = [];
+    let generatedSeats = [];
     switch (arrangementType) {
         case 'random':
             // 随机排座
-            seats = arrangeRandomSeats(allStudents, examRoom.capacity);
+            generatedSeats = arrangeRandomSeats(allStudents, examRoom.capacity);
             break;
         case 'byClass':
             // 按班级排座
-            seats = arrangeByClassSeats(allStudents, classIds, examRoom.capacity);
+            generatedSeats = arrangeByClassSeats(allStudents, classIds, examRoom.capacity);
             break;
         case 'byGrade':
             // 成绩加权排序
-            seats = arrangeByGradeSeats(allStudents, examRoom.capacity);
+            generatedSeats = arrangeByGradeSeats(allStudents, examRoom.capacity);
             break;
         case 'custom':
             // 自定义排座
@@ -1307,7 +1363,7 @@ app.post('/teacher/examrooms/:examRoomId/seats', authenticateToken, (req, res) =
                     message: '自定义排座需要提供有效的座位安排'
                 });
             }
-            seats = customArrangement;
+            generatedSeats = customArrangement;
             break;
         default:
             return res.status(400).json({
@@ -1316,21 +1372,27 @@ app.post('/teacher/examrooms/:examRoomId/seats', authenticateToken, (req, res) =
             });
     }
     
-    // 存储座位安排
-    examRoomSeats[examRoomId] = seats;
+    // 使用嵌套结构存储座位安排，使其与学生API期望的格式一致
+    examRoomSeats[examRoomId] = {
+        arrangementType: arrangementType,
+        createdAt: new Date().toISOString(),
+        seats: generatedSeats,
+        examRoomId: parseInt(examRoomId)
+    };
     
     // 更新考场学生数据
-    updateExamRoomStudents(examRoomId, seats);
+    updateExamRoomStudents(examRoomId, generatedSeats);
     
     // 保存数据
     saveData();
+    console.log(`为考场${examRoomId}生成座位安排完成，共${generatedSeats.length}个座位`);
     
     res.json({
         status: 'success',
         message: '座位安排成功',
         data: {
             examRoomId: parseInt(examRoomId),
-            seats
+            seats: generatedSeats
         }
     });
 });
@@ -1349,44 +1411,52 @@ app.get('/teacher/examrooms/:examRoomId/seats', authenticateToken, (req, res) =>
     }
     
     // 获取座位安排
-    const seats = examRoomSeats[examRoomId] || [];
+    const seatsData = examRoomSeats[examRoomId] || { seats: [] };
+    
+    console.log(`获取考场${examRoomId}座位安排，数据:`, 
+        seatsData.seats ? `${seatsData.seats.length}个座位` : '无座位数据');
     
     res.json({
         status: 'success',
         message: '获取座位安排成功',
-        data: seats
+        data: seatsData.seats || []
     });
 });
 
 // 学生获取自己的座位信息
 app.get('/student/examroom/seat', authenticateToken, (req, res) => {
     const userId = req.user.id;
-    console.log(`获取学生座位信息请求 - 用户: ${userId}`);
+    const username = req.user.username;
+    console.log(`获取学生座位信息请求 - 用户: ${userId}, 用户名: ${username}`);
     
     // 在所有考场中查找学生座位
     let studentSeat = null;
     let examRoomInfo = null;
     
     // 首先，找到学生在哪些考场有座位
-    for (const [examRoomId, seats] of Object.entries(examRoomSeats)) {
-        if (!seats || !seats.seats || !Array.isArray(seats.seats)) {
+    for (const [examRoomId, seatsData] of Object.entries(examRoomSeats)) {
+        if (!seatsData || !seatsData.seats || !Array.isArray(seatsData.seats)) {
             console.log(`考场 ${examRoomId} 的座位数据无效`);
             continue;
         }
         
-        const seat = seats.seats.find(s => s.studentId == userId || 
-            (req.user.username && s.studentId == req.user.username));
+        // 尝试多种方式匹配学生ID
+        const seat = seatsData.seats.find(s => 
+            s.studentId == userId || 
+            (username && s.studentId == username) ||
+            (s.studentNumber && s.studentNumber == username)
+        );
         
         if (seat) {
             studentSeat = seat;
             examRoomInfo = examRooms.find(e => e.id === parseInt(examRoomId));
-            console.log(`找到学生座位 - 学生: ${req.user.username}, 考场: ${examRoomId}, 座位: ${JSON.stringify(seat)}`);
+            console.log(`找到学生座位 - 学生: ${username}, 考场: ${examRoomId}, 座位: ${JSON.stringify(seat)}`);
             break;
         }
     }
     
     if (!studentSeat || !examRoomInfo) {
-        console.log(`未找到学生座位信息 - 学生: ${req.user.username}`);
+        console.log(`未找到学生座位信息 - 学生: ${username}`);
         return res.json({
             status: 'success',
             message: '未找到座位信息',
@@ -1473,6 +1543,11 @@ function arrangeByGradeSeats(students, capacity) {
 
 // 辅助函数: 更新考场学生数据
 function updateExamRoomStudents(examRoomId, seats) {
+    if (!seats || !Array.isArray(seats)) {
+        console.error(`更新考场学生数据失败: 座位数据无效 - 考场ID: ${examRoomId}`);
+        return;
+    }
+    
     const students = seats.map(seat => ({
         id: seat.studentId,
         studentId: seat.studentNumber,
@@ -1482,6 +1557,7 @@ function updateExamRoomStudents(examRoomId, seats) {
     }));
     
     studentsMap.set(parseInt(examRoomId), students);
+    console.log(`更新考场ID=${examRoomId}的学生数据，共${students.length}名学生`);
 }
 
 // 教师请求照片API
@@ -1665,43 +1741,47 @@ app.get('/student/seat', authenticateToken, (req, res) => {
   }
   
   const studentId = req.user.id;
+  const studentUsername = req.user.username;
   
   // 查找学生的座位信息
   let studentSeat = null;
+  let examRoomInfo = null;
   
   // 遍历所有考场座位安排
-  for (const examRoomId in examRooms) {
-    const examRoom = examRooms[examRoomId];
-    
-    // 检查该考场是否有座位安排
-    if (examRoom.seatArrangement && examRoom.seatArrangement.length > 0) {
-      // 在座位安排中查找该学生
-      for (const seat of examRoom.seatArrangement) {
-        if (seat.studentId === studentId) {
-          studentSeat = {
-            examRoomId: examRoomId,
-            examRoomName: examRoom.name,
-            seatNumber: seat.seatNumber,
-            row: seat.row,
-            column: seat.column
-          };
-          break;
-        }
-      }
+  for (const examRoomId in examRoomSeats) {
+    const examRoomData = examRoomSeats[examRoomId];
+    if (!examRoomData || !examRoomData.seats || !Array.isArray(examRoomData.seats)) {
+      console.log(`考场 ${examRoomId} 的座位数据无效`);
+      continue;
     }
     
-    // 如果找到了座位信息，就不用继续查找了
-    if (studentSeat) {
-      break;
+    // 在座位安排中查找该学生
+    const seat = examRoomData.seats.find(s => 
+      s.studentId == studentId || 
+      (studentUsername && s.studentId == studentUsername) ||
+      (s.studentNumber && s.studentNumber == studentUsername)
+    );
+    
+    if (seat) {
+      const examRoom = examRooms.find(e => e.id === parseInt(examRoomId));
+      if (examRoom) {
+        studentSeat = seat;
+        examRoomInfo = examRoom;
+        console.log(`找到学生座位 - 学生: ${req.user.username}, 考场: ${examRoom.name}, 座位: ${seat.seatId}`);
+        break;
+      }
     }
   }
   
   // 返回座位信息
-  if (studentSeat) {
-    console.log(`学生座位信息已找到 - 学生: ${req.user.username}, 考场: ${studentSeat.examRoomName}, 座位: ${studentSeat.seatNumber}`);
+  if (studentSeat && examRoomInfo) {
     return res.json({
       status: 'success',
-      data: studentSeat
+      message: '获取座位信息成功',
+      data: {
+        examRoom: examRoomInfo,
+        seat: studentSeat
+      }
     });
   } else {
     console.log(`未找到学生座位信息 - 学生: ${req.user.username}`);

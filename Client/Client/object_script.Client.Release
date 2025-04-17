@@ -1,0 +1,11 @@
+release/adminwidget.o
+release/logindialog.o
+release/main.o
+release/mainwindow.o
+release/studentwidget.o
+release/teacherwidget.o
+release/moc_adminwidget.o
+release/moc_logindialog.o
+release/moc_mainwindow.o
+release/moc_studentwidget.o
+release/moc_teacherwidget.o
