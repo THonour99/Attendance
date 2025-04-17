@@ -115,7 +115,12 @@ void MainWindow::showInterface()
     // 根据用户角色加载对应界面
     if (userRole == "student") {
         // 学生界面
-        studentWidget = new StudentWidget(userInfo, token, this);
+        studentWidget = new StudentWidget(this);
+        studentWidget->setUserInfo(
+            userInfo["username"].toString(),
+            userInfo["studentId"].toString(),
+            token
+        );
         stackedWidget->addWidget(studentWidget);
         stackedWidget->setCurrentWidget(studentWidget);
     } else if (userRole == "teacher") {
@@ -132,7 +137,12 @@ void MainWindow::showInterface()
         // 操作员界面 - 考勤端操作员
         // 考勤端在单独的应用程序中实现，这里也为操作员提供基本界面
         // 这里假设操作员可以访问学生和考勤信息
-        studentWidget = new StudentWidget(userInfo, token, this);
+        studentWidget = new StudentWidget(this);
+        studentWidget->setUserInfo(
+            userInfo["username"].toString(),
+            userInfo["id"].toString(),
+            token
+        );
         stackedWidget->addWidget(studentWidget);
         stackedWidget->setCurrentWidget(studentWidget);
     } else {

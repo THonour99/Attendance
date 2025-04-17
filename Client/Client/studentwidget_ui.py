@@ -90,13 +90,59 @@ class Ui_StudentWidget(object):
         self.verticalLayout_3.addWidget(self.classTableView)
 
         self.tabWidget.addTab(self.classTab, "")
+        self.photoTab = QWidget()
+        self.photoTab.setObjectName(u"photoTab")
+        self.verticalLayout_4 = QVBoxLayout(self.photoTab)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.photoStatusLabel = QLabel(self.photoTab)
+        self.photoStatusLabel.setObjectName(u"photoStatusLabel")
+
+        self.verticalLayout_4.addWidget(self.photoStatusLabel)
+
+        self.uploadPhotoButton = QPushButton(self.photoTab)
+        self.uploadPhotoButton.setObjectName(u"uploadPhotoButton")
+
+        self.verticalLayout_4.addWidget(self.uploadPhotoButton)
+
+        self.photoPreviewLabel = QLabel(self.photoTab)
+        self.photoPreviewLabel.setObjectName(u"photoPreviewLabel")
+        self.photoPreviewLabel.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_4.addWidget(self.photoPreviewLabel)
+
+        self.tabWidget.addTab(self.photoTab, "")
+        self.seatTab = QWidget()
+        self.seatTab.setObjectName(u"seatTab")
+        self.verticalLayout_5 = QVBoxLayout(self.seatTab)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.examRoomInfoLabel = QLabel(self.seatTab)
+        self.examRoomInfoLabel.setObjectName(u"examRoomInfoLabel")
+
+        self.verticalLayout_5.addWidget(self.examRoomInfoLabel)
+
+        self.seatInfoLabel = QLabel(self.seatTab)
+        self.seatInfoLabel.setObjectName(u"seatInfoLabel")
+
+        self.verticalLayout_5.addWidget(self.seatInfoLabel)
+
+        self.tabWidget.addTab(self.seatTab, "")
+        self.examInfoTab = QWidget()
+        self.examInfoTab.setObjectName(u"examInfoTab")
+        self.verticalLayout_6 = QVBoxLayout(self.examInfoTab)
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.examInfoLabel = QLabel(self.examInfoTab)
+        self.examInfoLabel.setObjectName(u"examInfoLabel")
+
+        self.verticalLayout_6.addWidget(self.examInfoLabel)
+
+        self.tabWidget.addTab(self.examInfoTab, "")
 
         self.verticalLayout.addWidget(self.tabWidget)
 
 
         self.retranslateUi(StudentWidget)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(4)
 
 
         QMetaObject.connectSlotsByName(StudentWidget)
@@ -110,5 +156,14 @@ class Ui_StudentWidget(object):
         self.refreshButton.setText(QCoreApplication.translate("StudentWidget", u"\u5237\u65b0\u6570\u636e", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.attendanceTab), QCoreApplication.translate("StudentWidget", u"\u8003\u52e4\u8bb0\u5f55", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.classTab), QCoreApplication.translate("StudentWidget", u"\u73ed\u7ea7\u4fe1\u606f", None))
+        self.photoStatusLabel.setText(QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u72b6\u6001: \u672a\u4e0a\u4f20", None))
+        self.uploadPhotoButton.setText(QCoreApplication.translate("StudentWidget", u"\u4e0a\u4f20\u7167\u7247", None))
+        self.photoPreviewLabel.setText(QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u9884\u89c8", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.photoTab), QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u7ba1\u7406", None))
+        self.examRoomInfoLabel.setText(QCoreApplication.translate("StudentWidget", u"\u8003\u573a\u4fe1\u606f", None))
+        self.seatInfoLabel.setText(QCoreApplication.translate("StudentWidget", u"\u5ea7\u4f4d\u4fe1\u606f", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.seatTab), QCoreApplication.translate("StudentWidget", u"\u5ea7\u4f4d\u4fe1\u606f", None))
+        self.examInfoLabel.setText(QCoreApplication.translate("StudentWidget", u"\u8003\u573a\u4fe1\u606f", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.examInfoTab), QCoreApplication.translate("StudentWidget", u"\u8003\u573a\u4fe1\u606f", None))
     # retranslateUi
 

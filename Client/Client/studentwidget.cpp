@@ -7,15 +7,19 @@
 #include <QUrl>
 #include <QStandardItemModel>
 #include <QDateTime>
+#include <QHttpMultiPart>
+#include <QBuffer>
+#include <QLabel>
+#include <QGridLayout>
+#include <QFileDialog>
+#include <QDebug>
 
 // 服务器地址
 const QString STUDENT_SERVER_URL = "http://localhost:8080";
 
-StudentWidget::StudentWidget(const QJsonObject &userInfo, const QString &token, QWidget *parent) :
+StudentWidget::StudentWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::StudentWidget),
-    userInfo(userInfo),
-    token(token),
     networkManager(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
@@ -27,16 +31,19 @@ StudentWidget::StudentWidget(const QJsonObject &userInfo, const QString &token, 
         if (endpoint.contains("/attendance/records")) {
             onAttendanceDataReceived(reply);
         } else if (endpoint.contains("/student/classes")) {
-            onClassInfoReceived(reply);
+            onClassDataReceived(reply);
+        } else if (endpoint.contains("/student/photo/upload")) {
+            onPhotoUploadResponse(reply);
+        } else if (endpoint.contains("/student/seat")) {
+            onSeatInfoReceived(reply);
+        } else if (endpoint.contains("/student/exam-info")) {
+            onExamInfoReceived(reply);
         }
     });
     
-    // 连接刷新按钮
+    // 连接按钮信号
     connect(ui->refreshButton, &QPushButton::clicked, this, &StudentWidget::onRefreshButtonClicked);
-    
-    // 加载初始数据
-    loadAttendanceRecords();
-    loadClassInfo();
+    connect(ui->uploadPhotoButton, &QPushButton::clicked, this, &StudentWidget::onUploadPhotoButtonClicked);
 }
 
 StudentWidget::~StudentWidget()
@@ -44,21 +51,25 @@ StudentWidget::~StudentWidget()
     delete ui;
 }
 
+void StudentWidget::setUserInfo(const QString& name, const QString& id, const QString& token)
+{
+    this->userName = name;
+    this->studentId = id;
+    this->userToken = token;
+    
+    // 设置学生信息标签
+    ui->nameLabel->setText("姓名: " + name);
+    ui->studentIdLabel->setText("学号: " + id);
+    
+    // 加载初始数据
+    loadAttendanceRecords();
+    loadClassInfo();
+    loadSeatInfo();
+    loadExamInfo();
+}
+
 void StudentWidget::setupUI()
 {
-    // 设置学生信息
-    if (userInfo.contains("username")) {
-        ui->nameLabel->setText("姓名: " + userInfo["username"].toString());
-    }
-    
-    // 对于学生用户，服务器可能没有提供学号信息，目前客户端显示为空
-    // 默认显示用户名作为学号
-    if (userInfo.contains("studentId")) {
-        ui->studentIdLabel->setText("学号: " + userInfo["studentId"].toString());
-    } else if (userInfo.contains("username")) {
-        ui->studentIdLabel->setText("学号: " + userInfo["username"].toString());
-    }
-    
     // 设置考勤表格模型
     QStandardItemModel *attendanceModel = new QStandardItemModel(this);
     attendanceModel->setHorizontalHeaderLabels(QStringList() << "考场" << "日期" << "状态" << "签到时间");
@@ -70,15 +81,22 @@ void StudentWidget::setupUI()
     classModel->setHorizontalHeaderLabels(QStringList() << "班级名称" << "教师" << "地点");
     ui->classTableView->setModel(classModel);
     ui->classTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    
+    // 初始化照片状态
+    updatePhotoStatus("未上传");
 }
 
 void StudentWidget::loadAttendanceRecords()
 {
+    if (userToken.isEmpty() || studentId.isEmpty()) {
+        return;
+    }
+    
     // 准备考勤记录请求
     QUrl url(STUDENT_SERVER_URL + "/attendance/records");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
     // 发送请求
     networkManager->get(request);
@@ -86,12 +104,7 @@ void StudentWidget::loadAttendanceRecords()
 
 void StudentWidget::loadClassInfo()
 {
-    // 使用学生ID获取班级信息
-    QString studentId;
-    if (userInfo.contains("id")) {
-        studentId = userInfo["id"].toString();
-    } else {
-        QMessageBox::warning(this, "错误", "无法获取学生ID");
+    if (userToken.isEmpty() || studentId.isEmpty()) {
         return;
     }
     
@@ -99,7 +112,39 @@ void StudentWidget::loadClassInfo()
     QUrl url(STUDENT_SERVER_URL + "/student/classes");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
+    
+    // 发送请求
+    networkManager->get(request);
+}
+
+void StudentWidget::loadSeatInfo()
+{
+    if (userToken.isEmpty() || studentId.isEmpty()) {
+        return;
+    }
+    
+    // 准备座位信息请求
+    QUrl url(STUDENT_SERVER_URL + "/student/examroom/seat");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
+    
+    // 发送请求
+    networkManager->get(request);
+}
+
+void StudentWidget::loadExamInfo()
+{
+    if (userToken.isEmpty() || studentId.isEmpty()) {
+        return;
+    }
+    
+    // 准备考场信息请求
+    QUrl url(STUDENT_SERVER_URL + "/student/exam-info");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
     // 发送请求
     networkManager->get(request);
@@ -174,7 +219,7 @@ void StudentWidget::onAttendanceDataReceived(QNetworkReply *reply)
     reply->deleteLater();
 }
 
-void StudentWidget::onClassInfoReceived(QNetworkReply *reply)
+void StudentWidget::onClassDataReceived(QNetworkReply *reply)
 {
     // 检查网络错误
     if (reply->error() != QNetworkReply::NoError) {
@@ -224,4 +269,252 @@ void StudentWidget::onRefreshButtonClicked()
     // 重新加载数据
     loadAttendanceRecords();
     loadClassInfo();
+    loadSeatInfo();
+    loadExamInfo();
+}
+
+void StudentWidget::onUploadPhotoButtonClicked()
+{
+    // 检查用户是否已登录
+    if (userToken.isEmpty() || studentId.isEmpty()) {
+        QMessageBox::warning(this, "错误", "请先登录后再上传照片");
+        return;
+    }
+
+    // 打开文件选择对话框
+    QString fileName = QFileDialog::getOpenFileName(this,
+        "选择照片", "", "图片文件 (*.png *.jpg *.jpeg)");
+
+    if (fileName.isEmpty())
+        return;
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, "错误", "无法打开所选照片文件");
+        return;
+    }
+
+    QByteArray imageData = file.readAll();
+    file.close();
+
+    // 检查文件大小是否过大
+    if (imageData.size() > 5 * 1024 * 1024) { // 限制为5MB
+        QMessageBox::warning(this, "错误", "照片文件过大，请选择小于5MB的文件");
+        return;
+    }
+
+    // 显示照片预览
+    QPixmap photo;
+    if (photo.loadFromData(imageData)) {
+        displayPhoto(photo);
+    } else {
+        QMessageBox::warning(this, "错误", "无法解析所选文件为图片");
+        return;
+    }
+
+    // 准备网络请求
+    QUrl url(STUDENT_SERVER_URL + "/student/photo/upload");
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
+    
+    // 将图片数据编码为Base64
+    QString base64Image = QString::fromLatin1(imageData.toBase64());
+    
+    // 创建JSON对象
+    QJsonObject jsonObject;
+    jsonObject["photo"] = base64Image;
+    
+    QJsonDocument jsonDoc(jsonObject);
+    
+    // 显示上传进度
+    updatePhotoStatus("正在上传照片...");
+    
+    // 发送网络请求
+    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
+    
+    connect(reply, &QNetworkReply::finished, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(reply->readAll());
+            QJsonObject jsonObject = jsonResponse.object();
+            
+            if (jsonObject["status"].toString() == "success") {
+                updatePhotoStatus("照片已上传");
+                QMessageBox::information(this, "成功", "照片上传成功");
+            } else {
+                QString errorMessage = "上传失败";
+                if (jsonObject.contains("message")) {
+                    errorMessage = jsonObject["message"].toString();
+                }
+                updatePhotoStatus("上传失败");
+                QMessageBox::warning(this, "错误", errorMessage);
+            }
+        } else {
+            updatePhotoStatus("上传失败");
+            QMessageBox::warning(this, "网络错误", "上传照片时发生错误: " + reply->errorString());
+        }
+        
+        reply->deleteLater();
+    });
+}
+
+void StudentWidget::onPhotoUploadResponse(QNetworkReply *reply)
+{
+    // 处理上传结果
+    if (reply->error() != QNetworkReply::NoError) {
+        updatePhotoStatus("上传失败");
+        QMessageBox::warning(this, "网络错误", "照片上传失败: " + reply->errorString());
+        reply->deleteLater();
+        return;
+    }
+    
+    // 解析响应数据
+    QByteArray responseData = reply->readAll();
+    QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+    QJsonObject jsonObject = jsonResponse.object();
+    
+    // 检查响应状态
+    if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+        updatePhotoStatus("已上传");
+        QMessageBox::information(this, "成功", "照片上传成功");
+    } else {
+        updatePhotoStatus("上传失败");
+        QString errorMessage = "照片上传失败";
+        if (jsonObject.contains("message")) {
+            errorMessage = jsonObject["message"].toString();
+        }
+        QMessageBox::warning(this, "错误", errorMessage);
+    }
+    
+    reply->deleteLater();
+}
+
+void StudentWidget::onSeatInfoReceived(QNetworkReply *reply)
+{
+    // 检查网络错误
+    if (reply->error() != QNetworkReply::NoError) {
+        ui->seatInfoLabel->setText("座位信息: 获取失败 - " + reply->errorString());
+        ui->examRoomInfoLabel->setText("考场: 获取失败");
+        reply->deleteLater();
+        return;
+    }
+    
+    // 解析响应数据
+    QByteArray responseData = reply->readAll();
+    QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+    QJsonObject jsonObject = jsonResponse.object();
+    
+    qDebug() << "座位信息响应:" << jsonResponse.toJson();
+    
+    // 检查响应状态
+    if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+        if (jsonObject.contains("data") && !jsonObject["data"].isNull() && jsonObject["data"].isObject()) {
+            QJsonObject data = jsonObject["data"].toObject();
+            
+            if (data.contains("examRoom") && data["examRoom"].isObject() && 
+                data.contains("seat") && data["seat"].isObject()) {
+                
+                QJsonObject examRoomObj = data["examRoom"].toObject();
+                QJsonObject seatObj = data["seat"].toObject();
+                
+                QString examRoomName = examRoomObj["name"].toString();
+                QString examRoomLocation = examRoomObj["location"].toString();
+                int seatNumber = seatObj["seatNumber"].toInt();
+                
+                ui->examRoomInfoLabel->setText(QString("考场: %1 (%2)").arg(examRoomName).arg(examRoomLocation));
+                ui->seatInfoLabel->setText(QString("座位号: %1").arg(seatNumber));
+            } else {
+                ui->examRoomInfoLabel->setText("考场: 数据格式错误");
+                ui->seatInfoLabel->setText("座位号: 数据格式错误");
+            }
+        } else {
+            ui->examRoomInfoLabel->setText("考场: 未分配");
+            ui->seatInfoLabel->setText("座位号: 未分配");
+        }
+    } else {
+        QString message = "获取失败";
+        if (jsonObject.contains("message")) {
+            message = jsonObject["message"].toString();
+        }
+        ui->examRoomInfoLabel->setText("考场: " + message);
+        ui->seatInfoLabel->setText("座位号: " + message);
+    }
+    
+    reply->deleteLater();
+}
+
+void StudentWidget::onExamInfoReceived(QNetworkReply *reply)
+{
+    // 检查网络错误
+    if (reply->error() != QNetworkReply::NoError) {
+        ui->examInfoLabel->setText("考试信息: 获取失败 - " + reply->errorString());
+        reply->deleteLater();
+        return;
+    }
+    
+    // 解析响应数据
+    QByteArray responseData = reply->readAll();
+    QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+    QJsonObject jsonObject = jsonResponse.object();
+    
+    qDebug() << "考试信息响应:" << jsonResponse.toJson();
+    
+    // 检查响应状态
+    if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+        if (jsonObject.contains("data") && !jsonObject["data"].isNull() && jsonObject["data"].isObject()) {
+            QJsonObject examData = jsonObject["data"].toObject();
+            
+            QString examName = examData["name"].toString();
+            QString examDate = examData["examDate"].toString();
+            QString examTime = examData["examTime"].toString();
+            QString examLocation = examData["location"].toString();
+            
+            // 格式化信息
+            QStringList infoLines;
+            if (!examName.isEmpty()) infoLines << "考试: " + examName;
+            if (!examDate.isEmpty()) {
+                // 尝试格式化日期
+                QDateTime dateTime = QDateTime::fromString(examDate, Qt::ISODate);
+                if (dateTime.isValid()) {
+                    infoLines << "日期: " + dateTime.toString("yyyy-MM-dd");
+                } else {
+                    infoLines << "日期: " + examDate;
+                }
+            }
+            if (!examTime.isEmpty()) infoLines << "时间: " + examTime;
+            if (!examLocation.isEmpty()) infoLines << "地点: " + examLocation;
+            
+            if (infoLines.isEmpty()) {
+                ui->examInfoLabel->setText("考试信息: 信息不完整");
+            } else {
+                ui->examInfoLabel->setText(infoLines.join("\n"));
+            }
+        } else {
+            ui->examInfoLabel->setText("考试信息: 未安排");
+        }
+    } else {
+        QString message = "获取失败";
+        if (jsonObject.contains("message")) {
+            message = jsonObject["message"].toString();
+        }
+        ui->examInfoLabel->setText("考试信息: " + message);
+    }
+    
+    reply->deleteLater();
+}
+
+void StudentWidget::updatePhotoStatus(const QString& status)
+{
+    ui->photoStatusLabel->setText("照片状态: " + status);
+}
+
+void StudentWidget::displayPhoto(const QPixmap& photo)
+{
+    // 调整照片大小以适应标签
+    QPixmap scaledPhoto = photo.scaled(ui->photoPreviewLabel->size(), 
+                                     Qt::KeepAspectRatio, 
+                                     Qt::SmoothTransformation);
+    
+    // 设置预览
+    ui->photoPreviewLabel->setPixmap(scaledPhoto);
+    ui->photoPreviewLabel->setScaledContents(true);
 } 

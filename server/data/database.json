@@ -23,6 +23,42 @@
       "username": "admin1",
       "password": "admin123",
       "role": "admin"
+    },
+    {
+      "id": 5,
+      "username": "2023100001",
+      "password": "student123",
+      "role": "student"
+    },
+    {
+      "id": 6,
+      "username": "2023100002",
+      "password": "student123",
+      "role": "student"
+    },
+    {
+      "id": 7,
+      "username": "2023200001",
+      "password": "student123",
+      "role": "student"
+    },
+    {
+      "id": 8,
+      "username": "2023200002",
+      "password": "student123",
+      "role": "student"
+    },
+    {
+      "id": 9,
+      "username": "2023300001",
+      "password": "student123",
+      "role": "student"
+    },
+    {
+      "id": 10,
+      "username": "2023300002",
+      "password": "student123",
+      "role": "student"
     }
   ],
   "classes": [
@@ -90,6 +126,18 @@
         "name": "学生2",
         "studentId": "2023100002",
         "className": "计算机科学与技术1班"
+      },
+      {
+        "id": 103,
+        "name": "学生1",
+        "studentId": "5",
+        "className": "计算机科学与技术1班"
+      },
+      {
+        "id": 104,
+        "name": "学生2",
+        "studentId": "6",
+        "className": "计算机科学与技术1班"
       }
     ],
     "2": [
@@ -109,6 +157,18 @@
         "id": 203,
         "name": "学生3",
         "studentId": "20232000002",
+        "className": "软件工程2班"
+      },
+      {
+        "id": 204,
+        "name": "学生3",
+        "studentId": "7",
+        "className": "软件工程2班"
+      },
+      {
+        "id": 205,
+        "name": "学生4",
+        "studentId": "8",
         "className": "软件工程2班"
       }
     ],
@@ -201,7 +261,7 @@
       }
     ]
   },
-  "lastUpdate": "2025-04-17T07:48:26.998Z",
+  "lastUpdate": "2025-04-17T09:22:21.416Z",
   "studentsMap": {
     "1": [
       {

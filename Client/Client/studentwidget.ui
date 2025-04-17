@@ -97,7 +97,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="attendanceTab">
       <attribute name="title">
@@ -119,10 +119,76 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="photoTab">
+      <attribute name="title">
+       <string>照片管理</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="photoStatusLabel">
+         <property name="text">
+          <string>照片状态: 未上传</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="uploadPhotoButton">
+         <property name="text">
+          <string>上传照片</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="photoPreviewLabel">
+         <property name="text">
+          <string>照片预览</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="seatTab">
+      <attribute name="title">
+       <string>座位信息</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="examRoomInfoLabel">
+         <property name="text">
+          <string>考场信息</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="seatInfoLabel">
+         <property name="text">
+          <string>座位信息</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="examInfoTab">
+      <attribute name="title">
+       <string>考场信息</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QLabel" name="examInfoLabel">
+         <property name="text">
+          <string>考场信息</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
  </widget>
  <resources/>
  <connections/>
-</ui> 
+</ui>

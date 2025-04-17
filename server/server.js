@@ -10,7 +10,38 @@ const app = express();
 const PORT = 8080;
 const JWT_SECRET = 'face-recognition-system-secret';
 const DATA_FILE = path.join(__dirname, 'data', 'database.json');
-const upload = multer({ dest: 'uploads/' });
+
+// 配置文件上传存储
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, 'uploads');
+    // 确保上传目录存在
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // 使用学生ID作为文件名前缀
+    const userId = req.user ? req.user.id : 'unknown';
+    cb(null, `student_${userId}_${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+// 创建multer实例
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 限制5MB
+  },
+  fileFilter: function (req, file, cb) {
+    // 只接受图片文件
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(new Error('只允许上传图片文件!'), false);
+    }
+    cb(null, true);
+  }
+});
 
 // 确保data目录存在
 if (!fs.existsSync(path.join(__dirname, 'data'))) {
@@ -39,7 +70,14 @@ app.use((req, res, next) => {
 let users = [
     { id: 1, username: 'admin', password: 'admin123', role: 'admin' },
     { id: 2, username: 'teacher', password: 'teacher123', role: 'teacher' },
-    { id: 3, username: 'operator', password: 'operator123', role: 'operator' }
+    { id: 3, username: 'operator', password: 'operator123', role: 'operator' },
+    // 添加学生账号
+    { id: 4, username: '2023100001', password: 'student123', role: 'student' },
+    { id: 5, username: '2023100002', password: 'student123', role: 'student' },
+    { id: 6, username: '2023200001', password: 'student123', role: 'student' },
+    { id: 7, username: '2023200002', password: 'student123', role: 'student' },
+    { id: 8, username: '2023300001', password: 'student123', role: 'student' },
+    { id: 9, username: '2023300002', password: 'student123', role: 'student' }
 ];
 
 // 添加模拟班级数据
@@ -56,7 +94,13 @@ let teacherClasses = [
 
 // 为学生分配班级
 let studentClasses = [
-    { studentId: 3, classIds: [1, 3] } // operator用户(作为学生)属于班级1和3
+    { studentId: 3, classIds: [1, 3] }, // operator用户(作为学生)属于班级1和3
+    { studentId: 4, classIds: [1] },    // 学生1属于班级1
+    { studentId: 5, classIds: [1] },    // 学生2属于班级1
+    { studentId: 6, classIds: [2] },    // 学生3属于班级2
+    { studentId: 7, classIds: [2] },    // 学生4属于班级2
+    { studentId: 8, classIds: [3] },    // 学生5属于班级3
+    { studentId: 9, classIds: [3] }     // 学生6属于班级3
 ];
 
 // 班级学生名单
@@ -127,7 +171,7 @@ function generateStudents(examRoomId, count) {
 }
 
 // 为每个考场生成学生
-const studentsMap = new Map();
+let studentsMap = new Map();
 examRooms.forEach(room => {
     studentsMap.set(room.id, generateStudents(room.id, room.capacity / 2)); // 生成一半容量的学生
 });
@@ -137,29 +181,38 @@ let attendanceRecords = [];
 
 // 数据持久化函数
 function saveData() {
-    const data = {
-        users,
-        classes,
-        teacherClasses,
-        studentClasses,
-        classStudents,
-        examRooms,
-        attendanceRecords,
-        examRoomClasses,
-        studentPhotos,
-        examRoomSeats,
-        lastUpdate: new Date().toISOString()
-    };
-    
-    // 将学生数据转换为可序列化的格式
-    const serializedStudentsMap = {};
-    for (const [key, value] of studentsMap.entries()) {
-        serializedStudentsMap[key] = value;
+    try {
+        // 准备要保存的数据
+        const data = {
+            users,
+            classes,
+            teacherClasses,
+            studentClasses,
+            classStudents,
+            examRooms,
+            attendanceRecords,
+            examRoomClasses,
+            studentPhotos,
+            examRoomSeats,
+            lastUpdate: new Date().toISOString()
+        };
+
+        // 序列化studentsMap
+        const serializedStudentsMap = {};
+        studentsMap.forEach((value, key) => {
+            serializedStudentsMap[key] = value;
+        });
+        data.studentsMap = serializedStudentsMap;
+        
+        try {
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+            console.log(`数据已保存到 ${DATA_FILE}`);
+        } catch (error) {
+            console.error('保存数据出错:', error);
+        }
+    } catch (error) {
+        console.error(`保存数据出错: ${error.message}`);
     }
-    data.studentsMap = serializedStudentsMap;
-    
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    console.log(`数据已保存到 ${DATA_FILE}`);
 }
 
 // 尝试加载持久化数据
@@ -183,19 +236,24 @@ function loadData() {
             
             // 恢复studentsMap
             if (data.studentsMap) {
-                studentsMap.clear();
-                for (const [key, value] of Object.entries(data.studentsMap)) {
-                    studentsMap.set(parseInt(key), value);
-                }
+                studentsMap = new Map();
+                Object.keys(data.studentsMap).forEach(key => {
+                    studentsMap.set(key, data.studentsMap[key]);
+                });
             }
             
             console.log(`从 ${DATA_FILE} 加载了数据, 最后更新: ${data.lastUpdate || '未知'}`);
             return true;
+        } else {
+            console.log('数据文件不存在，初始化默认数据');
+            initializeDefaultData();
+            return false;
         }
     } catch (error) {
-        console.error(`加载数据失败: ${error.message}`);
+        console.error('加载数据出错:', error);
+        initializeDefaultData();
+        return false;
     }
-    return false;
 }
 
 // 启动时加载数据
@@ -243,11 +301,18 @@ app.post('/auth/refresh', authenticateToken, (req, res) => {
 app.post('/auth/login', (req, res) => {
     const { username, password } = req.body;
     
+    console.log(`尝试登录: 用户名=${username}, 密码长度=${password ? password.length : 0}`);
+    
+    // 查找匹配用户
     const user = users.find(u => u.username === username && u.password === password);
     if (!user) {
+        console.log(`登录失败: 用户名或密码错误 - ${username}`);
         return res.status(401).json({ status: 'error', message: '用户名或密码错误' });
     }
     
+    console.log(`用户找到: ID=${user.id}, 角色=${user.role}`);
+    
+    // 生成令牌
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
     
     // 为不同角色的用户构建不同的响应信息
@@ -259,20 +324,23 @@ app.post('/auth/login', (req, res) => {
     
     // 如果是学生，添加学号信息
     if (user.role === 'student') {
+        // 以用户名作为学号
+        userInfo.studentId = user.username;
+        
         // 查找此用户对应的学生信息
         for (const classId in classStudents) {
             const student = classStudents[classId].find(s => s.studentId && s.studentId.toString() === user.username);
             if (student) {
+                console.log(`找到学生信息: 班级=${classId}, 学号=${student.studentId}, 姓名=${student.name}`);
                 userInfo.studentId = student.studentId;
                 break;
             }
         }
-        // 如果没找到对应学生信息，使用用户名作为学号
-        if (!userInfo.studentId) {
-            userInfo.studentId = user.username;
-        }
+        
+        console.log(`学生登录成功: 学号=${userInfo.studentId}`);
     }
     
+    // 发送成功响应
     res.json({
         status: 'success',
         message: '登录成功',
@@ -1293,21 +1361,32 @@ app.get('/teacher/examrooms/:examRoomId/seats', authenticateToken, (req, res) =>
 // 学生获取自己的座位信息
 app.get('/student/examroom/seat', authenticateToken, (req, res) => {
     const userId = req.user.id;
+    console.log(`获取学生座位信息请求 - 用户: ${userId}`);
     
     // 在所有考场中查找学生座位
     let studentSeat = null;
     let examRoomInfo = null;
     
+    // 首先，找到学生在哪些考场有座位
     for (const [examRoomId, seats] of Object.entries(examRoomSeats)) {
-        const seat = seats.find(s => s.studentId == userId);
+        if (!seats || !seats.seats || !Array.isArray(seats.seats)) {
+            console.log(`考场 ${examRoomId} 的座位数据无效`);
+            continue;
+        }
+        
+        const seat = seats.seats.find(s => s.studentId == userId || 
+            (req.user.username && s.studentId == req.user.username));
+        
         if (seat) {
             studentSeat = seat;
             examRoomInfo = examRooms.find(e => e.id === parseInt(examRoomId));
+            console.log(`找到学生座位 - 学生: ${req.user.username}, 考场: ${examRoomId}, 座位: ${JSON.stringify(seat)}`);
             break;
         }
     }
     
     if (!studentSeat || !examRoomInfo) {
+        console.log(`未找到学生座位信息 - 学生: ${req.user.username}`);
         return res.json({
             status: 'success',
             message: '未找到座位信息',
@@ -1571,6 +1650,302 @@ app.post('/student/uploadPhoto', authenticateToken, upload.single('photo'), (req
         data: { photoUrl } 
     });
 });
+
+// 学生获取座位信息的API
+app.get('/student/seat', authenticateToken, (req, res) => {
+  console.log(`获取学生座位信息请求 - 用户: ${req.user.id}`);
+  
+  // 验证是否为学生用户
+  if (req.user.role !== 'student') {
+    console.log(`座位信息请求被拒绝 - 非学生用户: ${req.user.username}, 角色: ${req.user.role}`);
+    return res.status(403).json({
+      status: 'error',
+      message: '只有学生用户可以查看自己的座位信息'
+    });
+  }
+  
+  const studentId = req.user.id;
+  
+  // 查找学生的座位信息
+  let studentSeat = null;
+  
+  // 遍历所有考场座位安排
+  for (const examRoomId in examRooms) {
+    const examRoom = examRooms[examRoomId];
+    
+    // 检查该考场是否有座位安排
+    if (examRoom.seatArrangement && examRoom.seatArrangement.length > 0) {
+      // 在座位安排中查找该学生
+      for (const seat of examRoom.seatArrangement) {
+        if (seat.studentId === studentId) {
+          studentSeat = {
+            examRoomId: examRoomId,
+            examRoomName: examRoom.name,
+            seatNumber: seat.seatNumber,
+            row: seat.row,
+            column: seat.column
+          };
+          break;
+        }
+      }
+    }
+    
+    // 如果找到了座位信息，就不用继续查找了
+    if (studentSeat) {
+      break;
+    }
+  }
+  
+  // 返回座位信息
+  if (studentSeat) {
+    console.log(`学生座位信息已找到 - 学生: ${req.user.username}, 考场: ${studentSeat.examRoomName}, 座位: ${studentSeat.seatNumber}`);
+    return res.json({
+      status: 'success',
+      data: studentSeat
+    });
+  } else {
+    console.log(`未找到学生座位信息 - 学生: ${req.user.username}`);
+    return res.json({
+      status: 'success',
+      message: '未分配座位',
+      data: null
+    });
+  }
+});
+
+// 学生获取考试信息的API
+app.get('/student/exam-info', authenticateToken, (req, res) => {
+    const userId = req.user.id;
+    console.log(`获取学生考试信息请求 - 用户: ${userId}`);
+    
+    // 检查用户是学生
+    if (req.user.role !== 'student') {
+        return res.status(403).json({
+            status: 'error',
+            message: '只有学生可以访问此API'
+        });
+    }
+    
+    // 查找学生所在班级
+    console.log(`查找学生(${userId})所在班级...`);
+    const studentClassRecord = studentClasses.find(sc => sc.studentId === userId);
+    
+    if (!studentClassRecord || !studentClassRecord.classIds || studentClassRecord.classIds.length === 0) {
+        console.log(`在studentClasses中未找到学生(${userId})的记录`);
+        
+        // 尝试使用学号查找
+        const username = req.user.username;
+        for (const classId in classStudents) {
+            const students = classStudents[classId];
+            const foundStudent = students.find(s => s.studentId === username);
+            if (foundStudent) {
+                console.log(`通过学号找到学生在班级 ${classId} 中`);
+                // 检查该班级是否有关联的考场
+                for (const [examRoomId, classes] of Object.entries(examRoomClasses)) {
+                    console.log(`检查考场 ${examRoomId} 是否包含班级 ${classId}`);
+                    if (classes && classes.includes(parseInt(classId))) {
+                        const examRoom = examRooms.find(er => er.id === parseInt(examRoomId));
+                        if (examRoom) {
+                            console.log(`找到学生考试信息 - 学生: ${username}, 考场: ${examRoomId}`);
+                            return res.json({
+                                status: 'success',
+                                message: '获取考试信息成功',
+                                data: examRoom
+                            });
+                        }
+                    } else {
+                        console.log(`考场 ${examRoomId} 没有关联班级 ${classId}`);
+                    }
+                }
+            }
+        }
+        
+        console.log(`未找到学生考试信息 - 学生: ${req.user.username}`);
+        return res.json({
+            status: 'success',
+            message: '未找到考试信息',
+            data: null
+        });
+    }
+    
+    // 检查学生班级是否有关联的考场
+    for (const classId of studentClassRecord.classIds) {
+        for (const [examRoomId, classes] of Object.entries(examRoomClasses)) {
+            if (classes && classes.includes(classId)) {
+                const examRoom = examRooms.find(er => er.id === parseInt(examRoomId));
+                if (examRoom) {
+                    console.log(`找到学生考试信息 - 学生ID: ${userId}, 班级: ${classId}, 考场: ${examRoomId}`);
+                    return res.json({
+                        status: 'success',
+                        message: '获取考试信息成功',
+                        data: examRoom
+                    });
+                }
+            }
+        }
+    }
+    
+    console.log(`未找到学生考试信息 - 用户ID: ${userId}`);
+    return res.json({
+        status: 'success',
+        message: '未找到考试信息',
+        data: null
+    });
+});
+
+// 学生上传照片的API
+app.post('/student/photo/upload', authenticateToken, upload.single('photo'), (req, res) => {
+  console.log(`学生照片上传请求 - 用户: ${req.user.id}`);
+  
+  // 验证是否为学生用户
+  if (req.user.role !== 'student') {
+    console.log(`照片上传请求被拒绝 - 非学生用户: ${req.user.username}, 角色: ${req.user.role}`);
+    return res.status(403).json({
+      status: 'error',
+      message: '只有学生用户可以上传自己的照片'
+    });
+  }
+  
+  // 检查是否有文件上传
+  if (!req.file) {
+    console.log(`照片上传失败 - 没有提供照片文件`);
+    return res.status(400).json({
+      status: 'error',
+      message: '没有提供照片文件'
+    });
+  }
+  
+  const studentId = req.user.id;
+  const photoPath = req.file.path;
+  
+  // 保存照片路径到学生记录中
+  // 注意：这里简化处理，实际应用中可能需要更复杂的存储逻辑
+  if (!studentPhotos[studentId]) {
+    studentPhotos[studentId] = {
+      photoPath: photoPath,
+      uploadTime: new Date().toISOString(),
+      status: 'uploaded'
+    };
+  } else {
+    studentPhotos[studentId].photoPath = photoPath;
+    studentPhotos[studentId].uploadTime = new Date().toISOString();
+    studentPhotos[studentId].status = 'uploaded';
+  }
+  
+  // 保存数据
+  saveData();
+  
+  console.log(`学生照片上传成功 - 学生: ${req.user.username}, 路径: ${photoPath}`);
+  return res.json({
+    status: 'success',
+    message: '照片上传成功',
+    data: {
+      photoPath: photoPath,
+      uploadTime: studentPhotos[studentId].uploadTime
+    }
+  });
+});
+
+// 初始化默认数据
+function initializeDefaultData() {
+    console.log('初始化默认数据...');
+    
+    // 重新初始化用户数据
+    users = [
+        { id: 1, username: 'admin', password: 'admin123', role: 'admin' },
+        { id: 2, username: 'teacher', password: 'teacher123', role: 'teacher' },
+        { id: 3, username: 'operator', password: 'operator123', role: 'operator' },
+        // 添加学生账号
+        { id: 4, username: '2023100001', password: 'student123', role: 'student' },
+        { id: 5, username: '2023100002', password: 'student123', role: 'student' },
+        { id: 6, username: '2023200001', password: 'student123', role: 'student' },
+        { id: 7, username: '2023200002', password: 'student123', role: 'student' },
+        { id: 8, username: '2023300001', password: 'student123', role: 'student' },
+        { id: 9, username: '2023300002', password: 'student123', role: 'student' }
+    ];
+
+    // 重新初始化班级数据
+    classes = [
+        { id: 1, className: '计算机科学与技术1班', teacher: '教师1', location: '教学楼A栋101' },
+        { id: 2, className: '软件工程2班', teacher: '教师2', location: '教学楼B栋203' },
+        { id: 3, className: '人工智能3班', teacher: '教师3', location: '教学楼C栋305' }
+    ];
+
+    // 重新初始化教师-班级关系
+    teacherClasses = [
+        { teacherId: 2, classIds: [1, 2] }
+    ];
+
+    // 重新初始化学生-班级关系
+    studentClasses = [
+        { studentId: 3, classIds: [1, 3] }, // operator用户(作为学生)属于班级1和3
+        { studentId: 4, classIds: [1] },    // 学生1属于班级1
+        { studentId: 5, classIds: [1] },    // 学生2属于班级1
+        { studentId: 6, classIds: [2] },    // 学生3属于班级2
+        { studentId: 7, classIds: [2] },    // 学生4属于班级2
+        { studentId: 8, classIds: [3] },    // 学生5属于班级3
+        { studentId: 9, classIds: [3] }     // 学生6属于班级3
+    ];
+
+    // 重新初始化班级学生名单
+    classStudents = {
+        1: [
+            { id: 101, name: '学生1', studentId: '2023100001', className: '计算机科学与技术1班' },
+            { id: 102, name: '学生2', studentId: '2023100002', className: '计算机科学与技术1班' }
+        ],
+        2: [
+            { id: 201, name: '学生3', studentId: '2023200001', className: '软件工程2班' },
+            { id: 202, name: '学生4', studentId: '2023200002', className: '软件工程2班' }
+        ],
+        3: [
+            { id: 301, name: '学生5', studentId: '2023300001', className: '人工智能3班' },
+            { id: 302, name: '学生6', studentId: '2023300002', className: '人工智能3班' }
+        ]
+    };
+
+    // 重新初始化考场数据
+    examRooms = [
+        { 
+            id: 1, 
+            name: '计算机学院期末考试 - 教学楼A101', 
+            location: '教学楼A101', 
+            capacity: 60, 
+            examDate: '2023-12-25', 
+            examTime: '09:00-11:00' 
+        },
+        { 
+            id: 2, 
+            name: '软件工程期末考试 - 教学楼B203', 
+            location: '教学楼B203', 
+            capacity: 45, 
+            examDate: '2023-12-26', 
+            examTime: '14:00-16:00' 
+        },
+        { 
+            id: 3, 
+            name: '人工智能导论 - 综合楼C305', 
+            location: '综合楼C305', 
+            capacity: 30, 
+            examDate: '2023-12-27', 
+            examTime: '10:00-12:00' 
+        }
+    ];
+
+    // 重新初始化关联关系和照片数据
+    examRoomClasses = {};
+    studentPhotos = {};
+    examRoomSeats = {};
+    attendanceRecords = [];
+
+    // 重新生成学生数据
+    studentsMap = new Map();
+    examRooms.forEach(room => {
+        studentsMap.set(room.id, generateStudents(room.id, room.capacity / 2));
+    });
+    
+    console.log('初始化默认数据完成');
+    saveData();
+}
 
 // 启动服务器
 app.listen(PORT, () => {
