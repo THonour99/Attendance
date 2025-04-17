@@ -154,217 +154,89 @@
     }
   ],
   "attendanceRecords": [],
-  "lastUpdate": "2025-04-16T13:38:57.318Z",
+  "examRoomClasses": {
+    "1": [
+      1,
+      2,
+      4
+    ]
+  },
+  "studentPhotos": {},
+  "examRoomSeats": {
+    "1": [
+      {
+        "seatId": 1,
+        "studentId": 203,
+        "studentName": "学生3",
+        "studentNumber": "20232000002",
+        "className": "软件工程2班"
+      },
+      {
+        "seatId": 2,
+        "studentId": 102,
+        "studentName": "学生2",
+        "studentNumber": "2023100002",
+        "className": "计算机科学与技术1班"
+      },
+      {
+        "seatId": 3,
+        "studentId": 101,
+        "studentName": "学生1",
+        "studentNumber": "2023100001",
+        "className": "计算机科学与技术1班"
+      },
+      {
+        "seatId": 4,
+        "studentId": 202,
+        "studentName": "学生4",
+        "studentNumber": "2023200002",
+        "className": "软件工程2班"
+      },
+      {
+        "seatId": 5,
+        "studentId": 201,
+        "studentName": "学生3",
+        "studentNumber": "2023200001",
+        "className": "软件工程2班"
+      }
+    ]
+  },
+  "lastUpdate": "2025-04-17T07:48:26.998Z",
   "studentsMap": {
     "1": [
       {
-        "id": 101,
-        "studentId": "20231001",
-        "name": "学生1-1",
+        "id": 203,
+        "studentId": "20232000002",
+        "name": "学生3",
         "seatNumber": 1,
         "attendanceStatus": "未到"
       },
       {
         "id": 102,
-        "studentId": "20231002",
-        "name": "学生1-2",
+        "studentId": "2023100002",
+        "name": "学生2",
         "seatNumber": 2,
         "attendanceStatus": "未到"
       },
       {
-        "id": 103,
-        "studentId": "20231003",
-        "name": "学生1-3",
+        "id": 101,
+        "studentId": "2023100001",
+        "name": "学生1",
         "seatNumber": 3,
         "attendanceStatus": "未到"
       },
       {
-        "id": 104,
-        "studentId": "20231004",
-        "name": "学生1-4",
+        "id": 202,
+        "studentId": "2023200002",
+        "name": "学生4",
         "seatNumber": 4,
         "attendanceStatus": "未到"
       },
       {
-        "id": 105,
-        "studentId": "20231005",
-        "name": "学生1-5",
+        "id": 201,
+        "studentId": "2023200001",
+        "name": "学生3",
         "seatNumber": 5,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 106,
-        "studentId": "20231006",
-        "name": "学生1-6",
-        "seatNumber": 6,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 107,
-        "studentId": "20231007",
-        "name": "学生1-7",
-        "seatNumber": 7,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 108,
-        "studentId": "20231008",
-        "name": "学生1-8",
-        "seatNumber": 8,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 109,
-        "studentId": "20231009",
-        "name": "学生1-9",
-        "seatNumber": 9,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 110,
-        "studentId": "20231010",
-        "name": "学生1-10",
-        "seatNumber": 10,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 111,
-        "studentId": "20231011",
-        "name": "学生1-11",
-        "seatNumber": 11,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 112,
-        "studentId": "20231012",
-        "name": "学生1-12",
-        "seatNumber": 12,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 113,
-        "studentId": "20231013",
-        "name": "学生1-13",
-        "seatNumber": 13,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 114,
-        "studentId": "20231014",
-        "name": "学生1-14",
-        "seatNumber": 14,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 115,
-        "studentId": "20231015",
-        "name": "学生1-15",
-        "seatNumber": 15,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 116,
-        "studentId": "20231016",
-        "name": "学生1-16",
-        "seatNumber": 16,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 117,
-        "studentId": "20231017",
-        "name": "学生1-17",
-        "seatNumber": 17,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 118,
-        "studentId": "20231018",
-        "name": "学生1-18",
-        "seatNumber": 18,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 119,
-        "studentId": "20231019",
-        "name": "学生1-19",
-        "seatNumber": 19,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 120,
-        "studentId": "20231020",
-        "name": "学生1-20",
-        "seatNumber": 20,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 121,
-        "studentId": "20231021",
-        "name": "学生1-21",
-        "seatNumber": 21,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 122,
-        "studentId": "20231022",
-        "name": "学生1-22",
-        "seatNumber": 22,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 123,
-        "studentId": "20231023",
-        "name": "学生1-23",
-        "seatNumber": 23,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 124,
-        "studentId": "20231024",
-        "name": "学生1-24",
-        "seatNumber": 24,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 125,
-        "studentId": "20231025",
-        "name": "学生1-25",
-        "seatNumber": 25,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 126,
-        "studentId": "20231026",
-        "name": "学生1-26",
-        "seatNumber": 26,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 127,
-        "studentId": "20231027",
-        "name": "学生1-27",
-        "seatNumber": 27,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 128,
-        "studentId": "20231028",
-        "name": "学生1-28",
-        "seatNumber": 28,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 129,
-        "studentId": "20231029",
-        "name": "学生1-29",
-        "seatNumber": 29,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 130,
-        "studentId": "20231030",
-        "name": "学生1-30",
-        "seatNumber": 30,
         "attendanceStatus": "未到"
       }
     ],

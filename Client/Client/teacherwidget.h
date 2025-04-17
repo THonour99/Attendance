@@ -6,6 +6,22 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QStandardItemModel>
+#include <QFileDialog>
+#include <QTableWidgetItem>
+#include <QAxObject>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <QListWidget>
+#include <QGroupBox>
+#include <QDialogButtonBox>
+#include <QScrollArea>
+#include <QTimer>
+#include <QGridLayout>
 
 namespace Ui {
 class TeacherWidget;
@@ -35,6 +51,21 @@ private slots:
     void onAddExamRoomClicked();
     void onExportAttendanceClicked();
     
+    // 排座功能
+    void onManageSeatsClicked();
+    void onLinkClassesClicked();
+    void onLinkClassButtonClicked();
+    void onClassesLinkedReceived(QNetworkReply *reply);
+    void onGenerateSeatsClicked();
+    void onSeatArrangementTypeChanged(int index);
+    void onExportSeatsClicked();
+    
+    // 照片管理
+    void onViewStudentPhotoClicked();
+    void onStudentPhotoReceived(QNetworkReply *reply);
+    void onRequestStudentPhotosClicked();
+    void onViewStudentPhotosClicked();
+    
     // 刷新数据
     void onRefreshButtonClicked();
 
@@ -48,15 +79,24 @@ private:
     QStandardItemModel *studentsModel;
     QStandardItemModel *examRoomsModel;
     QStandardItemModel *attendanceModel;
+    QStandardItemModel *linkedClassesModel;
+    QStandardItemModel *seatsModel;
     
     QString currentClassId;
     QString currentExamRoomId;
+    QString currentStudentId;
 
     void setupUI();
     void loadClassesData();
     void loadExamRoomsData();
     void loadStudentsInClass(const QString &classId);
     void loadExamAttendance(const QString &examRoomId);
+    void loadLinkedClasses(const QString &examRoomId);
+    void loadExamSeats(const QString &examRoomId);
+    
+    // 导出辅助函数
+    bool exportToExcel(const QString &fileName, QStandardItemModel *model, const QString &sheetName);
+    bool exportToCSV(const QString &fileName, QStandardItemModel *model);
 };
 
 #endif // TEACHERWIDGET_H 
