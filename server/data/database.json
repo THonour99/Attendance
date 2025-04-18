@@ -1764,43 +1764,43 @@
   "examRoomSeats": {
     "1": {
       "arrangementType": "random",
-      "createdAt": "2025-04-18T09:32:11.723Z",
+      "createdAt": "2025-04-18T14:09:16.191Z",
       "seats": [
         {
           "seatId": 1,
+          "studentId": 22,
+          "studentName": "计算机科学2023级1班-学生16",
+          "studentNumber": "20230116"
+        },
+        {
+          "seatId": 2,
           "studentId": 7,
           "studentName": "计算机科学2023级1班-学生01",
           "studentNumber": "20230101"
         },
         {
-          "seatId": 2,
-          "studentId": 8,
-          "studentName": "计算机科学2023级1班-学生02",
-          "studentNumber": "20230102"
-        },
-        {
           "seatId": 3,
-          "studentId": 19,
-          "studentName": "计算机科学2023级1班-学生13",
-          "studentNumber": "20230113"
+          "studentId": 10,
+          "studentName": "计算机科学2023级1班-学生04",
+          "studentNumber": "20230104"
         },
         {
           "seatId": 4,
+          "studentId": 16,
+          "studentName": "计算机科学2023级1班-学生10",
+          "studentNumber": "20230110"
+        },
+        {
+          "seatId": 5,
           "studentId": 17,
           "studentName": "计算机科学2023级1班-学生11",
           "studentNumber": "20230111"
         },
         {
-          "seatId": 5,
-          "studentId": 18,
-          "studentName": "计算机科学2023级1班-学生12",
-          "studentNumber": "20230112"
-        },
-        {
           "seatId": 6,
-          "studentId": 21,
-          "studentName": "计算机科学2023级1班-学生15",
-          "studentNumber": "20230115"
+          "studentId": 8,
+          "studentName": "计算机科学2023级1班-学生02",
+          "studentNumber": "20230102"
         },
         {
           "seatId": 7,
@@ -1810,81 +1810,81 @@
         },
         {
           "seatId": 8,
-          "studentId": 20,
-          "studentName": "计算机科学2023级1班-学生14",
-          "studentNumber": "20230114"
-        },
-        {
-          "seatId": 9,
-          "studentId": 23,
-          "studentName": "计算机科学2023级1班-学生17",
-          "studentNumber": "20230117"
-        },
-        {
-          "seatId": 10,
-          "studentId": 16,
-          "studentName": "计算机科学2023级1班-学生10",
-          "studentNumber": "20230110"
-        },
-        {
-          "seatId": 11,
-          "studentId": 11,
-          "studentName": "计算机科学2023级1班-学生05",
-          "studentNumber": "20230105"
-        },
-        {
-          "seatId": 12,
-          "studentId": 15,
-          "studentName": "计算机科学2023级1班-学生09",
-          "studentNumber": "20230109"
-        },
-        {
-          "seatId": 13,
-          "studentId": 26,
-          "studentName": "计算机科学2023级1班-学生20",
-          "studentNumber": "20230120"
-        },
-        {
-          "seatId": 14,
           "studentId": 13,
           "studentName": "计算机科学2023级1班-学生07",
           "studentNumber": "20230107"
         },
         {
-          "seatId": 15,
+          "seatId": 9,
+          "studentId": 26,
+          "studentName": "计算机科学2023级1班-学生20",
+          "studentNumber": "20230120"
+        },
+        {
+          "seatId": 10,
           "studentId": 25,
           "studentName": "计算机科学2023级1班-学生19",
           "studentNumber": "20230119"
         },
         {
-          "seatId": 16,
+          "seatId": 11,
+          "studentId": 9,
+          "studentName": "计算机科学2023级1班-学生03",
+          "studentNumber": "20230103"
+        },
+        {
+          "seatId": 12,
+          "studentId": 21,
+          "studentName": "计算机科学2023级1班-学生15",
+          "studentNumber": "20230115"
+        },
+        {
+          "seatId": 13,
+          "studentId": 23,
+          "studentName": "计算机科学2023级1班-学生17",
+          "studentNumber": "20230117"
+        },
+        {
+          "seatId": 14,
+          "studentId": 11,
+          "studentName": "计算机科学2023级1班-学生05",
+          "studentNumber": "20230105"
+        },
+        {
+          "seatId": 15,
           "studentId": 14,
           "studentName": "计算机科学2023级1班-学生08",
           "studentNumber": "20230108"
         },
         {
-          "seatId": 17,
-          "studentId": 10,
-          "studentName": "计算机科学2023级1班-学生04",
-          "studentNumber": "20230104"
-        },
-        {
-          "seatId": 18,
+          "seatId": 16,
           "studentId": 12,
           "studentName": "计算机科学2023级1班-学生06",
           "studentNumber": "20230106"
         },
         {
+          "seatId": 17,
+          "studentId": 15,
+          "studentName": "计算机科学2023级1班-学生09",
+          "studentNumber": "20230109"
+        },
+        {
+          "seatId": 18,
+          "studentId": 18,
+          "studentName": "计算机科学2023级1班-学生12",
+          "studentNumber": "20230112"
+        },
+        {
           "seatId": 19,
-          "studentId": 22,
-          "studentName": "计算机科学2023级1班-学生16",
-          "studentNumber": "20230116"
+          "studentId": 20,
+          "studentName": "计算机科学2023级1班-学生14",
+          "studentNumber": "20230114"
         },
         {
           "seatId": 20,
-          "studentId": 9,
-          "studentName": "计算机科学2023级1班-学生03",
-          "studentNumber": "20230103"
+          "studentId": 19,
+          "studentName": "计算机科学2023级1班-学生13",
+          "studentNumber": "20230113"
         }
       ],
       "examRoomId": 1
@@ -7101,48 +7101,48 @@
       "read": false
     }
   ],
-  "lastUpdate": "2025-04-18T13:54:21.428Z",
+  "lastUpdate": "2025-04-18T14:09:16.192Z",
   "studentsMap": {
     "1": [
       {
-        "id": 7,
-        "studentId": "20230101",
-        "name": "计算机科学2023级1班-学生01",
+        "id": 22,
+        "studentId": "20230116",
+        "name": "计算机科学2023级1班-学生16",
         "seatNumber": 1,
         "attendanceStatus": "未到"
       },
       {
-        "id": 8,
-        "studentId": "20230102",
-        "name": "计算机科学2023级1班-学生02",
+        "id": 7,
+        "studentId": "20230101",
+        "name": "计算机科学2023级1班-学生01",
         "seatNumber": 2,
         "attendanceStatus": "未到"
       },
       {
-        "id": 19,
-        "studentId": "20230113",
-        "name": "计算机科学2023级1班-学生13",
+        "id": 10,
+        "studentId": "20230104",
+        "name": "计算机科学2023级1班-学生04",
         "seatNumber": 3,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 16,
+        "studentId": "20230110",
+        "name": "计算机科学2023级1班-学生10",
+        "seatNumber": 4,
         "attendanceStatus": "未到"
       },
       {
         "id": 17,
         "studentId": "20230111",
         "name": "计算机科学2023级1班-学生11",
-        "seatNumber": 4,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 18,
-        "studentId": "20230112",
-        "name": "计算机科学2023级1班-学生12",
         "seatNumber": 5,
         "attendanceStatus": "未到"
       },
       {
-        "id": 21,
-        "studentId": "20230115",
-        "name": "计算机科学2023级1班-学生15",
+        "id": 8,
+        "studentId": "20230102",
+        "name": "计算机科学2023级1班-学生02",
         "seatNumber": 6,
         "attendanceStatus": "未到"
       },
@@ -7154,93 +7154,93 @@
         "attendanceStatus": "未到"
       },
       {
-        "id": 20,
-        "studentId": "20230114",
-        "name": "计算机科学2023级1班-学生14",
+        "id": 13,
+        "studentId": "20230107",
+        "name": "计算机科学2023级1班-学生07",
         "seatNumber": 8,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 23,
-        "studentId": "20230117",
-        "name": "计算机科学2023级1班-学生17",
-        "seatNumber": 9,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 16,
-        "studentId": "20230110",
-        "name": "计算机科学2023级1班-学生10",
-        "seatNumber": 10,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 11,
-        "studentId": "20230105",
-        "name": "计算机科学2023级1班-学生05",
-        "seatNumber": 11,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 15,
-        "studentId": "20230109",
-        "name": "计算机科学2023级1班-学生09",
-        "seatNumber": 12,
         "attendanceStatus": "未到"
       },
       {
         "id": 26,
         "studentId": "20230120",
         "name": "计算机科学2023级1班-学生20",
-        "seatNumber": 13,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 13,
-        "studentId": "20230107",
-        "name": "计算机科学2023级1班-学生07",
-        "seatNumber": 14,
+        "seatNumber": 9,
         "attendanceStatus": "未到"
       },
       {
         "id": 25,
         "studentId": "20230119",
         "name": "计算机科学2023级1班-学生19",
-        "seatNumber": 15,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 14,
-        "studentId": "20230108",
-        "name": "计算机科学2023级1班-学生08",
-        "seatNumber": 16,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 10,
-        "studentId": "20230104",
-        "name": "计算机科学2023级1班-学生04",
-        "seatNumber": 17,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 12,
-        "studentId": "20230106",
-        "name": "计算机科学2023级1班-学生06",
-        "seatNumber": 18,
-        "attendanceStatus": "未到"
-      },
-      {
-        "id": 22,
-        "studentId": "20230116",
-        "name": "计算机科学2023级1班-学生16",
-        "seatNumber": 19,
+        "seatNumber": 10,
         "attendanceStatus": "未到"
       },
       {
         "id": 9,
         "studentId": "20230103",
         "name": "计算机科学2023级1班-学生03",
+        "seatNumber": 11,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 21,
+        "studentId": "20230115",
+        "name": "计算机科学2023级1班-学生15",
+        "seatNumber": 12,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 23,
+        "studentId": "20230117",
+        "name": "计算机科学2023级1班-学生17",
+        "seatNumber": 13,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 11,
+        "studentId": "20230105",
+        "name": "计算机科学2023级1班-学生05",
+        "seatNumber": 14,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 14,
+        "studentId": "20230108",
+        "name": "计算机科学2023级1班-学生08",
+        "seatNumber": 15,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 12,
+        "studentId": "20230106",
+        "name": "计算机科学2023级1班-学生06",
+        "seatNumber": 16,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 15,
+        "studentId": "20230109",
+        "name": "计算机科学2023级1班-学生09",
+        "seatNumber": 17,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 18,
+        "studentId": "20230112",
+        "name": "计算机科学2023级1班-学生12",
+        "seatNumber": 18,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 20,
+        "studentId": "20230114",
+        "name": "计算机科学2023级1班-学生14",
+        "seatNumber": 19,
+        "attendanceStatus": "未到"
+      },
+      {
+        "id": 19,
+        "studentId": "20230113",
+        "name": "计算机科学2023级1班-学生13",
         "seatNumber": 20,
         "attendanceStatus": "未到"
       }
