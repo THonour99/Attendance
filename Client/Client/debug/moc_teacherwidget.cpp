@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_TeacherWidget_t {
-    QByteArrayData data[29];
-    char stringdata0[604];
+    QByteArrayData data[45];
+    char stringdata0[981];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -60,7 +60,23 @@ QT_MOC_LITERAL(24, 475, 25), // "onViewStudentPhotoClicked"
 QT_MOC_LITERAL(25, 501, 22), // "onStudentPhotoReceived"
 QT_MOC_LITERAL(26, 524, 29), // "onRequestStudentPhotosClicked"
 QT_MOC_LITERAL(27, 554, 26), // "onViewStudentPhotosClicked"
-QT_MOC_LITERAL(28, 581, 22) // "onRefreshButtonClicked"
+QT_MOC_LITERAL(28, 581, 27), // "onViewStudentPhotosFinished"
+QT_MOC_LITERAL(29, 609, 22), // "onRefreshButtonClicked"
+QT_MOC_LITERAL(30, 632, 21), // "onLogoutButtonClicked"
+QT_MOC_LITERAL(31, 654, 29), // "onRefreshClassesButtonClicked"
+QT_MOC_LITERAL(32, 684, 23), // "onAddClassButtonClicked"
+QT_MOC_LITERAL(33, 708, 24), // "onEditClassButtonClicked"
+QT_MOC_LITERAL(34, 733, 26), // "onDeleteClassButtonClicked"
+QT_MOC_LITERAL(35, 760, 21), // "onStudentDataReceived"
+QT_MOC_LITERAL(36, 782, 25), // "onAddStudentButtonClicked"
+QT_MOC_LITERAL(37, 808, 26), // "onEditStudentButtonClicked"
+QT_MOC_LITERAL(38, 835, 28), // "onDeleteStudentButtonClicked"
+QT_MOC_LITERAL(39, 864, 21), // "onExportButtonClicked"
+QT_MOC_LITERAL(40, 886, 21), // "onSearchButtonClicked"
+QT_MOC_LITERAL(41, 908, 19), // "onSearchTextChanged"
+QT_MOC_LITERAL(42, 928, 4), // "text"
+QT_MOC_LITERAL(43, 933, 22), // "setupClassPhotoRefresh"
+QT_MOC_LITERAL(44, 956, 24) // "refreshClassPhotosStatus"
 
     },
     "TeacherWidget\0onClassesDataReceived\0"
@@ -79,7 +95,18 @@ QT_MOC_LITERAL(28, 581, 22) // "onRefreshButtonClicked"
     "onStudentPhotoReceived\0"
     "onRequestStudentPhotosClicked\0"
     "onViewStudentPhotosClicked\0"
-    "onRefreshButtonClicked"
+    "onViewStudentPhotosFinished\0"
+    "onRefreshButtonClicked\0onLogoutButtonClicked\0"
+    "onRefreshClassesButtonClicked\0"
+    "onAddClassButtonClicked\0"
+    "onEditClassButtonClicked\0"
+    "onDeleteClassButtonClicked\0"
+    "onStudentDataReceived\0onAddStudentButtonClicked\0"
+    "onEditStudentButtonClicked\0"
+    "onDeleteStudentButtonClicked\0"
+    "onExportButtonClicked\0onSearchButtonClicked\0"
+    "onSearchTextChanged\0text\0"
+    "setupClassPhotoRefresh\0refreshClassPhotosStatus"
 };
 #undef QT_MOC_LITERAL
 
@@ -89,7 +116,7 @@ static const uint qt_meta_data_TeacherWidget[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      23,   14, // methods
+      38,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -97,29 +124,44 @@ static const uint qt_meta_data_TeacherWidget[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    1,  129,    2, 0x08 /* Private */,
-       5,    1,  132,    2, 0x08 /* Private */,
-       6,    1,  135,    2, 0x08 /* Private */,
-       9,    0,  138,    2, 0x08 /* Private */,
-      10,    0,  139,    2, 0x08 /* Private */,
-      11,    0,  140,    2, 0x08 /* Private */,
-      12,    1,  141,    2, 0x08 /* Private */,
-      13,    1,  144,    2, 0x08 /* Private */,
-      14,    1,  147,    2, 0x08 /* Private */,
-      15,    0,  150,    2, 0x08 /* Private */,
-      16,    0,  151,    2, 0x08 /* Private */,
-      17,    0,  152,    2, 0x08 /* Private */,
-      18,    0,  153,    2, 0x08 /* Private */,
-      19,    0,  154,    2, 0x08 /* Private */,
-      20,    1,  155,    2, 0x08 /* Private */,
-      21,    0,  158,    2, 0x08 /* Private */,
-      22,    1,  159,    2, 0x08 /* Private */,
-      23,    0,  162,    2, 0x08 /* Private */,
-      24,    0,  163,    2, 0x08 /* Private */,
-      25,    1,  164,    2, 0x08 /* Private */,
-      26,    0,  167,    2, 0x08 /* Private */,
-      27,    0,  168,    2, 0x08 /* Private */,
-      28,    0,  169,    2, 0x08 /* Private */,
+       1,    1,  204,    2, 0x08 /* Private */,
+       5,    1,  207,    2, 0x08 /* Private */,
+       6,    1,  210,    2, 0x08 /* Private */,
+       9,    0,  213,    2, 0x08 /* Private */,
+      10,    0,  214,    2, 0x08 /* Private */,
+      11,    0,  215,    2, 0x08 /* Private */,
+      12,    1,  216,    2, 0x08 /* Private */,
+      13,    1,  219,    2, 0x08 /* Private */,
+      14,    1,  222,    2, 0x08 /* Private */,
+      15,    0,  225,    2, 0x08 /* Private */,
+      16,    0,  226,    2, 0x08 /* Private */,
+      17,    0,  227,    2, 0x08 /* Private */,
+      18,    0,  228,    2, 0x08 /* Private */,
+      19,    0,  229,    2, 0x08 /* Private */,
+      20,    1,  230,    2, 0x08 /* Private */,
+      21,    0,  233,    2, 0x08 /* Private */,
+      22,    1,  234,    2, 0x08 /* Private */,
+      23,    0,  237,    2, 0x08 /* Private */,
+      24,    0,  238,    2, 0x08 /* Private */,
+      25,    1,  239,    2, 0x08 /* Private */,
+      26,    0,  242,    2, 0x08 /* Private */,
+      27,    0,  243,    2, 0x08 /* Private */,
+      28,    1,  244,    2, 0x08 /* Private */,
+      29,    0,  247,    2, 0x08 /* Private */,
+      30,    0,  248,    2, 0x08 /* Private */,
+      31,    0,  249,    2, 0x08 /* Private */,
+      32,    0,  250,    2, 0x08 /* Private */,
+      33,    0,  251,    2, 0x08 /* Private */,
+      34,    0,  252,    2, 0x08 /* Private */,
+      35,    1,  253,    2, 0x08 /* Private */,
+      36,    0,  256,    2, 0x08 /* Private */,
+      37,    0,  257,    2, 0x08 /* Private */,
+      38,    0,  258,    2, 0x08 /* Private */,
+      39,    0,  259,    2, 0x08 /* Private */,
+      40,    0,  260,    2, 0x08 /* Private */,
+      41,    1,  261,    2, 0x08 /* Private */,
+      43,    0,  264,    2, 0x08 /* Private */,
+      44,    0,  265,    2, 0x08 /* Private */,
 
  // slots: parameters
     QMetaType::Void, 0x80000000 | 3,    4,
@@ -143,6 +185,21 @@ static const uint qt_meta_data_TeacherWidget[] = {
     QMetaType::Void,
     QMetaType::Void, 0x80000000 | 3,    4,
     QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 3,    4,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 3,    4,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::QString,   42,
     QMetaType::Void,
     QMetaType::Void,
 
@@ -177,7 +234,22 @@ void TeacherWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         case 19: _t->onStudentPhotoReceived((*reinterpret_cast< QNetworkReply*(*)>(_a[1]))); break;
         case 20: _t->onRequestStudentPhotosClicked(); break;
         case 21: _t->onViewStudentPhotosClicked(); break;
-        case 22: _t->onRefreshButtonClicked(); break;
+        case 22: _t->onViewStudentPhotosFinished((*reinterpret_cast< QNetworkReply*(*)>(_a[1]))); break;
+        case 23: _t->onRefreshButtonClicked(); break;
+        case 24: _t->onLogoutButtonClicked(); break;
+        case 25: _t->onRefreshClassesButtonClicked(); break;
+        case 26: _t->onAddClassButtonClicked(); break;
+        case 27: _t->onEditClassButtonClicked(); break;
+        case 28: _t->onDeleteClassButtonClicked(); break;
+        case 29: _t->onStudentDataReceived((*reinterpret_cast< QNetworkReply*(*)>(_a[1]))); break;
+        case 30: _t->onAddStudentButtonClicked(); break;
+        case 31: _t->onEditStudentButtonClicked(); break;
+        case 32: _t->onDeleteStudentButtonClicked(); break;
+        case 33: _t->onExportButtonClicked(); break;
+        case 34: _t->onSearchButtonClicked(); break;
+        case 35: _t->onSearchTextChanged((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 36: _t->setupClassPhotoRefresh(); break;
+        case 37: _t->refreshClassPhotosStatus(); break;
         default: ;
         }
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
@@ -225,6 +297,20 @@ void TeacherWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
                 *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< QNetworkReply* >(); break;
             }
             break;
+        case 22:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<int*>(_a[0]) = -1; break;
+            case 0:
+                *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< QNetworkReply* >(); break;
+            }
+            break;
+        case 29:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<int*>(_a[0]) = -1; break;
+            case 0:
+                *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< QNetworkReply* >(); break;
+            }
+            break;
         }
     }
 }
@@ -258,13 +344,13 @@ int TeacherWidget::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 23)
+        if (_id < 38)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 23;
+        _id -= 38;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 23)
+        if (_id < 38)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 23;
+        _id -= 38;
     }
     return _id;
 }

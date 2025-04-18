@@ -11,10 +11,12 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QFrame>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QScrollArea>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
@@ -35,6 +37,13 @@ public:
     QLabel *studentIdLabel;
     QSpacerItem *horizontalSpacer_2;
     QPushButton *refreshButton;
+    QPushButton *notificationButton;
+    QPushButton *logoutButton;
+    QFrame *notificationsFrame;
+    QVBoxLayout *verticalLayout_7;
+    QScrollArea *notificationsScrollArea;
+    QWidget *notificationsScrollAreaContents;
+    QVBoxLayout *notificationsLayout;
     QTabWidget *tabWidget;
     QWidget *attendanceTab;
     QVBoxLayout *verticalLayout_2;
@@ -45,8 +54,10 @@ public:
     QWidget *photoTab;
     QVBoxLayout *verticalLayout_4;
     QLabel *photoStatusLabel;
+    QLabel *photoPathLabel;
     QPushButton *uploadPhotoButton;
     QLabel *photoPreviewLabel;
+    QLabel *photoLabel;
     QWidget *seatTab;
     QVBoxLayout *verticalLayout_5;
     QLabel *examRoomInfoLabel;
@@ -101,8 +112,39 @@ public:
 
         infoLayout->addWidget(refreshButton);
 
+        notificationButton = new QPushButton(StudentWidget);
+        notificationButton->setObjectName(QString::fromUtf8("notificationButton"));
+
+        infoLayout->addWidget(notificationButton);
+
+        logoutButton = new QPushButton(StudentWidget);
+        logoutButton->setObjectName(QString::fromUtf8("logoutButton"));
+
+        infoLayout->addWidget(logoutButton);
+
 
         verticalLayout->addLayout(infoLayout);
+
+        notificationsFrame = new QFrame(StudentWidget);
+        notificationsFrame->setObjectName(QString::fromUtf8("notificationsFrame"));
+        notificationsFrame->setFrameShape(QFrame::StyledPanel);
+        notificationsFrame->setFrameShadow(QFrame::Raised);
+        verticalLayout_7 = new QVBoxLayout(notificationsFrame);
+        verticalLayout_7->setObjectName(QString::fromUtf8("verticalLayout_7"));
+        notificationsScrollArea = new QScrollArea(notificationsFrame);
+        notificationsScrollArea->setObjectName(QString::fromUtf8("notificationsScrollArea"));
+        notificationsScrollArea->setWidgetResizable(true);
+        notificationsScrollAreaContents = new QWidget();
+        notificationsScrollAreaContents->setObjectName(QString::fromUtf8("notificationsScrollAreaContents"));
+        notificationsScrollAreaContents->setGeometry(QRect(0, 0, 760, 69));
+        notificationsLayout = new QVBoxLayout(notificationsScrollAreaContents);
+        notificationsLayout->setObjectName(QString::fromUtf8("notificationsLayout"));
+        notificationsScrollArea->setWidget(notificationsScrollAreaContents);
+
+        verticalLayout_7->addWidget(notificationsScrollArea);
+
+
+        verticalLayout->addWidget(notificationsFrame);
 
         tabWidget = new QTabWidget(StudentWidget);
         tabWidget->setObjectName(QString::fromUtf8("tabWidget"));
@@ -135,6 +177,11 @@ public:
 
         verticalLayout_4->addWidget(photoStatusLabel);
 
+        photoPathLabel = new QLabel(photoTab);
+        photoPathLabel->setObjectName(QString::fromUtf8("photoPathLabel"));
+
+        verticalLayout_4->addWidget(photoPathLabel);
+
         uploadPhotoButton = new QPushButton(photoTab);
         uploadPhotoButton->setObjectName(QString::fromUtf8("uploadPhotoButton"));
 
@@ -145,6 +192,13 @@ public:
         photoPreviewLabel->setAlignment(Qt::AlignCenter);
 
         verticalLayout_4->addWidget(photoPreviewLabel);
+
+        photoLabel = new QLabel(photoTab);
+        photoLabel->setObjectName(QString::fromUtf8("photoLabel"));
+        photoLabel->setMinimumSize(QSize(150, 150));
+        photoLabel->setAlignment(Qt::AlignCenter);
+
+        verticalLayout_4->addWidget(photoLabel);
 
         tabWidget->addTab(photoTab, QString());
         seatTab = new QWidget();
@@ -178,7 +232,7 @@ public:
 
         retranslateUi(StudentWidget);
 
-        tabWidget->setCurrentIndex(4);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(StudentWidget);
@@ -191,11 +245,15 @@ public:
         nameLabel->setText(QCoreApplication::translate("StudentWidget", "\345\247\223\345\220\215: ", nullptr));
         studentIdLabel->setText(QCoreApplication::translate("StudentWidget", "\345\255\246\345\217\267: ", nullptr));
         refreshButton->setText(QCoreApplication::translate("StudentWidget", "\345\210\267\346\226\260\346\225\260\346\215\256", nullptr));
+        notificationButton->setText(QCoreApplication::translate("StudentWidget", "\351\200\232\347\237\245", nullptr));
+        logoutButton->setText(QCoreApplication::translate("StudentWidget", "\351\200\200\345\207\272\347\231\273\345\275\225", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(attendanceTab), QCoreApplication::translate("StudentWidget", "\350\200\203\345\213\244\350\256\260\345\275\225", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(classTab), QCoreApplication::translate("StudentWidget", "\347\217\255\347\272\247\344\277\241\346\201\257", nullptr));
         photoStatusLabel->setText(QCoreApplication::translate("StudentWidget", "\347\205\247\347\211\207\347\212\266\346\200\201: \346\234\252\344\270\212\344\274\240", nullptr));
+        photoPathLabel->setText(QCoreApplication::translate("StudentWidget", "\347\205\247\347\211\207\350\267\257\345\276\204:", nullptr));
         uploadPhotoButton->setText(QCoreApplication::translate("StudentWidget", "\344\270\212\344\274\240\347\205\247\347\211\207", nullptr));
         photoPreviewLabel->setText(QCoreApplication::translate("StudentWidget", "\347\205\247\347\211\207\351\242\204\350\247\210", nullptr));
+        photoLabel->setText(QCoreApplication::translate("StudentWidget", "\347\205\247\347\211\207\346\230\276\347\244\272", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(photoTab), QCoreApplication::translate("StudentWidget", "\347\205\247\347\211\207\347\256\241\347\220\206", nullptr));
         examRoomInfoLabel->setText(QCoreApplication::translate("StudentWidget", "\350\200\203\345\234\272\344\277\241\346\201\257", nullptr));
         seatInfoLabel->setText(QCoreApplication::translate("StudentWidget", "\345\272\247\344\275\215\344\277\241\346\201\257", nullptr));

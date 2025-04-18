@@ -294,7 +294,7 @@ class Ui_TeacherWidget(object):
 
         self.retranslateUi(TeacherWidget)
 
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(TeacherWidget)

@@ -12,6 +12,7 @@
 #include <QVector>
 #include <QUrl>
 #include <QMessageBox>
+#include <QHttpMultiPart>
 
 // 考场信息结构体
 struct ExamRoom {
@@ -33,6 +34,9 @@ struct StudentInfo {
     QString attendanceStatus;
 };
 
+// 回调函数类型定义
+typedef std::function<void(QJsonObject)> NetworkCallback;
+
 class NetworkManager : public QObject
 {
     Q_OBJECT
@@ -49,6 +53,27 @@ public:
     // 获取当前登录用户名
     QString getLoggedInUsername() const { return loggedInUsername; }
     QString getLoggedInUserId() const { return loggedInUserId; }
+    
+    // 获取学生通知
+    void getNotifications(NetworkCallback callback);
+    
+    // 标记通知为已读
+    void markNotificationAsRead(int notificationId, NetworkCallback callback);
+    
+    // 上传学生照片
+    void uploadStudentPhoto(const QByteArray& photoData, NetworkCallback callback);
+    
+    // 上传考勤记录（带回调）
+    void uploadAttendanceRecord(int examRoomId, const QString& studentId, bool isPresent, const QString& photoUrl, NetworkCallback callback);
+    
+    // 辅助函数：确保照片URL是完整的
+    QString ensureFullPhotoUrl(const QString &photoUrl);
+    
+    // 发送消息功能
+    void sendMessage(int examRoomId, const QString &message, NetworkCallback callback);
+    
+    // 获取考场聊天记录
+    void getChatMessages(int examRoomId, NetworkCallback callback);
     
 signals:
     void networkError(const QString &errorMessage);

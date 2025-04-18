@@ -14,6 +14,10 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QTimer>
+#include <QFileInfo>
+#include <QIcon>
+#include <QPixmap>
+#include <QNetworkAccessManager>
 
 // 服务器地址
 const QString STUDENT_SERVER_URL = "http://localhost:8080";
@@ -21,54 +25,75 @@ const QString STUDENT_SERVER_URL = "http://localhost:8080";
 StudentWidget::StudentWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::StudentWidget),
-    networkManager(new QNetworkAccessManager(this))
+    networkManager(new QNetworkAccessManager(this)),
+    notificationTimer(new QTimer(this)),
+    hasRetryLoadSeat(false),
+    currentPhotoUrl("")
 {
     ui->setupUi(this);
     setupUI();
     
-    // 连接网络响应信号
+    // 连接网络错误信号
     connect(networkManager, &QNetworkAccessManager::finished, this, [this](QNetworkReply *reply) {
-        QString endpoint = reply->request().url().path();
+        QString endpoint = reply->url().toString();
+        
         if (endpoint.contains("/attendance/records")) {
             onAttendanceDataReceived(reply);
         } else if (endpoint.contains("/student/classes")) {
             onClassDataReceived(reply);
-        } else if (endpoint.contains("/student/photo/upload")) {
+        } else if (endpoint.contains("/student/uploadPhoto")) {
             onPhotoUploadResponse(reply);
         } else if (endpoint.contains("/student/seat")) {
             onSeatInfoReceived(reply);
-        } else if (endpoint.contains("/student/examroom/seat")) {
-            onSeatInfoReceived(reply); // 也处理旧端点的响应
         } else if (endpoint.contains("/student/exam-info")) {
             onExamInfoReceived(reply);
+        } else if (endpoint.contains("/notifications")) {
+            // 不在这里处理通知，而是在专门的槽函数中处理
+            reply->deleteLater();
+        } else {
+            // 处理其他未知响应
+            reply->deleteLater();
         }
     });
     
     // 连接按钮信号
     connect(ui->refreshButton, &QPushButton::clicked, this, &StudentWidget::onRefreshButtonClicked);
     connect(ui->uploadPhotoButton, &QPushButton::clicked, this, &StudentWidget::onUploadPhotoButtonClicked);
+    connect(ui->logoutButton, &QPushButton::clicked, this, &StudentWidget::onLogoutButtonClicked);
+    connect(ui->notificationButton, &QPushButton::clicked, this, &StudentWidget::onNotificationButtonClicked);
+    
+    // 连接通知定时器信号
+    connect(notificationTimer, &QTimer::timeout, this, &StudentWidget::checkNotifications);
+    
+    // 加载用户信息和座位信息
+    loadUserInfo();
+    loadSeatInfo();
+    checkNotifications();
 }
 
 StudentWidget::~StudentWidget()
 {
+    // 清理资源
     delete ui;
 }
 
-void StudentWidget::setUserInfo(const QString& name, const QString& id, const QString& token)
+void StudentWidget::setUserInfo(const QString& name, const QString& studentId, const QString& token)
 {
     this->userName = name;
-    this->studentId = id;
+    this->studentId = studentId;
     this->userToken = token;
     
-    // 设置学生信息标签
     ui->nameLabel->setText("姓名: " + name);
-    ui->studentIdLabel->setText("学号: " + id);
+    ui->studentIdLabel->setText("学号: " + studentId);
     
-    // 加载初始数据
+    // 加载学生数据
     loadAttendanceRecords();
     loadClassInfo();
     loadSeatInfo();
     loadExamInfo();
+    
+    // 启动通知系统
+    setupNotificationSystem();
 }
 
 void StudentWidget::setupUI()
@@ -87,6 +112,9 @@ void StudentWidget::setupUI()
     
     // 初始化照片状态
     updatePhotoStatus("未上传");
+    
+    // 隐藏通知面板，直到有通知
+    ui->notificationsFrame->setVisible(false);
 }
 
 void StudentWidget::loadAttendanceRecords()
@@ -95,14 +123,29 @@ void StudentWidget::loadAttendanceRecords()
         return;
     }
     
-    // 准备考勤记录请求
-    QUrl url(STUDENT_SERVER_URL + "/attendance/records");
+    // 准备考勤记录请求URL和参数
+    QString url = STUDENT_SERVER_URL + "/attendance/records";
+    
+    // 创建一个QNetworkAccessManager实例用于发送请求
+    QNetworkAccessManager *tempManager = new QNetworkAccessManager(this);
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
-    // 发送请求
-    networkManager->get(request);
+    // 发送请求并处理响应
+    QNetworkReply *reply = tempManager->get(request);
+    
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        tempManager->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            QMessageBox::warning(this, "网络错误", "获取考勤记录失败: " + reply->errorString());
+            return;
+        }
+        
+        onAttendanceDataReceived(reply);
+    });
 }
 
 void StudentWidget::loadClassInfo()
@@ -111,14 +154,29 @@ void StudentWidget::loadClassInfo()
         return;
     }
     
-    // 准备班级信息请求
-    QUrl url(STUDENT_SERVER_URL + "/student/classes");
+    // 准备班级信息请求URL和参数
+    QString url = STUDENT_SERVER_URL + "/student/classes";
+    
+    // 创建一个QNetworkAccessManager实例用于发送请求
+    QNetworkAccessManager *tempManager = new QNetworkAccessManager(this);
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
-    // 发送请求
-    networkManager->get(request);
+    // 发送请求并处理响应
+    QNetworkReply *reply = tempManager->get(request);
+    
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        tempManager->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            QMessageBox::warning(this, "网络错误", "获取班级信息失败: " + reply->errorString());
+            return;
+        }
+        
+        onClassDataReceived(reply);
+    });
 }
 
 void StudentWidget::loadSeatInfo()
@@ -129,22 +187,28 @@ void StudentWidget::loadSeatInfo()
     
     qDebug() << "正在请求学生座位信息...";
     
-    // 修改为使用正确的座位信息API端点
-    QUrl url(STUDENT_SERVER_URL + "/student/seat");
+    // 准备座位信息请求URL和参数
+    QString url = STUDENT_SERVER_URL + "/student/seat";
+    
+    // 创建一个QNetworkAccessManager实例用于发送请求
+    QNetworkAccessManager *tempManager = new QNetworkAccessManager(this);
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
-    // 发送请求
-    QNetworkReply* reply = networkManager->get(request);
+    // 发送请求并处理响应
+    QNetworkReply *reply = tempManager->get(request);
     
-    // 添加调试信息
     connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        tempManager->deleteLater();
+        
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "座位信息请求失败:" << reply->errorString() << "URL:" << url.toString();
-        } else {
-            qDebug() << "座位信息请求成功，等待响应处理...";
+            qDebug() << "座位信息请求失败:" << reply->errorString() << "URL:" << url;
+            return;
         }
+        
+        onSeatInfoReceived(reply);
     });
 }
 
@@ -154,14 +218,29 @@ void StudentWidget::loadExamInfo()
         return;
     }
     
-    // 准备考场信息请求
-    QUrl url(STUDENT_SERVER_URL + "/student/exam-info");
+    // 准备考场信息请求URL和参数
+    QString url = STUDENT_SERVER_URL + "/student/exam-info";
+    
+    // 创建一个QNetworkAccessManager实例用于发送请求
+    QNetworkAccessManager *tempManager = new QNetworkAccessManager(this);
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
-    // 发送请求
-    networkManager->get(request);
+    // 发送请求并处理响应
+    QNetworkReply *reply = tempManager->get(request);
+    
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        tempManager->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            QMessageBox::warning(this, "网络错误", "获取考场信息失败: " + reply->errorString());
+            return;
+        }
+        
+        onExamInfoReceived(reply);
+    });
 }
 
 void StudentWidget::onAttendanceDataReceived(QNetworkReply *reply)
@@ -287,118 +366,202 @@ void StudentWidget::onRefreshButtonClicked()
     loadExamInfo();
 }
 
+void StudentWidget::onLogoutButtonClicked()
+{
+    // 实现退出登录的逻辑
+    int result = QMessageBox::question(this, "退出登录", "确定要退出登录吗？", 
+                                      QMessageBox::Yes | QMessageBox::No);
+    
+    if (result == QMessageBox::Yes) {
+        // 清除用户信息
+        userToken.clear();
+        userName.clear();
+        studentId.clear();
+        
+        // 停止通知定时器
+        notificationTimer->stop();
+        
+        // 通知父窗口退出登录
+        emit logout();
+        
+        // 关闭窗口
+        close();
+    }
+}
+
+void StudentWidget::onNotificationButtonClicked()
+{
+    // 切换通知面板的可见性
+    bool isVisible = ui->notificationsFrame->isVisible();
+    ui->notificationsFrame->setVisible(!isVisible);
+    
+    // 如果显示通知面板，立即刷新通知数据
+    if (!isVisible) {
+        qDebug() << "正在刷新通知数据...";
+        checkNotifications();
+    } else {
+        qDebug() << "隐藏通知面板";
+    }
+    
+    // 更新按钮样式
+    if (!isVisible) {
+        ui->notificationButton->setStyleSheet("background-color: #2196F3; color: white;");
+    } else {
+        // 如果有未读通知，保持红色提示
+        int unreadCount = ui->notificationButton->text().contains("(") ? 
+            ui->notificationButton->text().section("(", 1, 1).section(")", 0, 0).toInt() : 0;
+        
+        if (unreadCount > 0) {
+            ui->notificationButton->setStyleSheet("background-color: #FF5722; color: white;");
+        } else {
+            ui->notificationButton->setStyleSheet("");
+        }
+    }
+}
+
 void StudentWidget::onUploadPhotoButtonClicked()
 {
-    // 检查用户是否已登录
-    if (userToken.isEmpty() || studentId.isEmpty()) {
-        QMessageBox::warning(this, "错误", "请先登录后再上传照片");
+    // 打开文件对话框选择照片
+    QString fileName = QFileDialog::getOpenFileName(this,
+        "选择学生照片", "", "图片文件 (*.png *.jpg *.jpeg)");
+    
+    if (fileName.isEmpty()) {
         return;
     }
-
-    // 打开文件选择对话框
-    QString fileName = QFileDialog::getOpenFileName(this,
-        "选择照片", "", "图片文件 (*.png *.jpg *.jpeg)");
-
-    if (fileName.isEmpty())
+    
+    // 加载图片并检查大小
+    QPixmap photo(fileName);
+    if (photo.isNull()) {
+        QMessageBox::warning(this, "错误", "无法加载选择的图片");
         return;
-
+    }
+    
+    // 检查文件大小（限制为2MB）
+    QFileInfo fileInfo(fileName);
+    if (fileInfo.size() > 2 * 1024 * 1024) {
+        QMessageBox::warning(this, "错误", "图片大小超过2MB限制");
+        return;
+    }
+    
+    // 将图片转换为字节数组
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::warning(this, "错误", "无法打开所选照片文件");
+        QMessageBox::warning(this, "错误", "无法读取选择的图片");
         return;
     }
-
+    
     QByteArray imageData = file.readAll();
     file.close();
-
-    // 检查文件大小是否过大
-    if (imageData.size() > 5 * 1024 * 1024) { // 限制为5MB
-        QMessageBox::warning(this, "错误", "照片文件过大，请选择小于5MB的文件");
-        return;
-    }
-
-    // 显示照片预览
-    QPixmap photo;
-    if (photo.loadFromData(imageData)) {
-        displayPhoto(photo);
-    } else {
-        QMessageBox::warning(this, "错误", "无法解析所选文件为图片");
-        return;
-    }
-
-    // 准备网络请求
-    QUrl url(STUDENT_SERVER_URL + "/student/photo/upload");
+    
+    // 显示上传中状态
+    updatePhotoStatus("上传中...");
+    
+    // 准备上传照片请求
+    QString url = STUDENT_SERVER_URL + "/student/uploadPhoto";
     QNetworkRequest request(url);
     request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
     
-    // 将图片数据编码为Base64
-    QString base64Image = QString::fromLatin1(imageData.toBase64());
+    // 创建multipart/form-data请求
+    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
     
-    // 创建JSON对象
-    QJsonObject jsonObject;
-    jsonObject["photo"] = base64Image;
+    // 添加用户ID部分
+    QHttpPart userIdPart;
+    userIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"userId\""));
+    userIdPart.setBody(studentId.toUtf8());
+    multiPart->append(userIdPart);
     
-    QJsonDocument jsonDoc(jsonObject);
+    // 添加照片部分
+    QHttpPart photoPart;
+    QString fileExtension = QFileInfo(fileName).suffix();
+    QString mimeType = "image/" + fileExtension.toLower();
+    QString contentDisposition = QString("form-data; name=\"photo\"; filename=\"photo.%1\"").arg(fileExtension);
+    photoPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(contentDisposition));
+    photoPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(mimeType));
+    photoPart.setBody(imageData);
+    multiPart->append(photoPart);
     
-    // 显示上传进度
-    updatePhotoStatus("正在上传照片...");
-    
-    // 发送网络请求
-    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
-    
-    connect(reply, &QNetworkReply::finished, [this, reply]() {
-        if (reply->error() == QNetworkReply::NoError) {
-            QJsonDocument jsonResponse = QJsonDocument::fromJson(reply->readAll());
-            QJsonObject jsonObject = jsonResponse.object();
-            
-            if (jsonObject["status"].toString() == "success") {
-                updatePhotoStatus("照片已上传");
-                QMessageBox::information(this, "成功", "照片上传成功");
-            } else {
-                QString errorMessage = "上传失败";
-                if (jsonObject.contains("message")) {
-                    errorMessage = jsonObject["message"].toString();
-                }
-                updatePhotoStatus("上传失败");
-                QMessageBox::warning(this, "错误", errorMessage);
-            }
-        } else {
-            updatePhotoStatus("上传失败");
-            QMessageBox::warning(this, "网络错误", "上传照片时发生错误: " + reply->errorString());
-        }
-        
-        reply->deleteLater();
-    });
+    // 发送POST请求
+    QNetworkReply *reply = networkManager->post(request, multiPart);
+    multiPart->setParent(reply); // 设置父对象，确保自动删除
 }
 
 void StudentWidget::onPhotoUploadResponse(QNetworkReply *reply)
 {
-    // 处理上传结果
-    if (reply->error() != QNetworkReply::NoError) {
-        updatePhotoStatus("上传失败");
-        QMessageBox::warning(this, "网络错误", "照片上传失败: " + reply->errorString());
-        reply->deleteLater();
-        return;
-    }
-    
-    // 解析响应数据
-    QByteArray responseData = reply->readAll();
-    QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
-    QJsonObject jsonObject = jsonResponse.object();
-    
-    // 检查响应状态
-    if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
-        updatePhotoStatus("已上传");
-        QMessageBox::information(this, "成功", "照片上传成功");
-    } else {
-        updatePhotoStatus("上传失败");
-        QString errorMessage = "照片上传失败";
-        if (jsonObject.contains("message")) {
-            errorMessage = jsonObject["message"].toString();
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObject = jsonResponse.object();
+
+        qDebug() << "照片上传响应:" << QString(responseData);
+
+        // 检查响应格式，服务器可能返回status字段或success字段
+        bool success = false;
+        QString message;
+        QJsonObject data;
+
+        // 标准化状态和消息
+        if (jsonObject.contains("status")) {
+            // 旧API格式
+            success = (jsonObject["status"].toInt() == 200 || jsonObject["status"].toString() == "success");
+            message = jsonObject["message"].toString();
+            if (jsonObject.contains("data")) {
+                data = jsonObject["data"].toObject();
+            }
+        } else if (jsonObject.contains("success")) {
+            // 新API格式
+            success = jsonObject["success"].toBool();
+            message = jsonObject["message"].toString();
+            if (jsonObject.contains("data")) {
+                data = jsonObject["data"].toObject();
+            }
         }
-        QMessageBox::warning(this, "错误", errorMessage);
+
+        if (success) {
+            QString photoUrl = data["photoUrl"].toString();
+            
+            // 确保URL是完整的
+            if (!photoUrl.isEmpty()) {
+                if (!photoUrl.startsWith("http")) {
+                    // 如果是相对路径，添加服务器基础URL
+                    if (!photoUrl.startsWith("/")) {
+                        photoUrl = "/" + photoUrl;
+                    }
+                    currentPhotoUrl = STUDENT_SERVER_URL + photoUrl;
+                } else {
+                    // 已经是完整URL
+                    currentPhotoUrl = photoUrl;
+                }
+                qDebug() << "照片完整URL:" << currentPhotoUrl;
+                
+                // 直接显示成功图标
+                QPixmap successIcon(":/images/success.png");
+                if (!successIcon.isNull()) {
+                    displayPhoto(successIcon);
+                }
+                
+                // **更新状态为成功**
+                updatePhotoStatus("照片上传成功！");
+                QMessageBox::information(this, "成功", "照片上传成功");
+                
+                // 刷新数据以显示更新后的状态
+                QTimer::singleShot(1000, this, &StudentWidget::loadClassInfo);
+            } else {
+                updatePhotoStatus("照片URL为空");
+                QMessageBox::warning(this, "错误", "服务器返回成功，但照片URL为空");
+            }
+        } else {
+            // **更新状态为上传失败**
+            QString finalMessage = message.isEmpty() ? "未知错误" : message;
+            updatePhotoStatus("照片上传失败: " + finalMessage);
+            QMessageBox::warning(this, "错误", "照片上传失败: " + finalMessage);
+        }
+    } else {
+        // **更新状态为网络错误**
+        updatePhotoStatus("网络错误: " + reply->errorString());
+        QMessageBox::warning(this, "网络错误", "照片上传失败: " + reply->errorString());
     }
     
+    // 清理reply对象
     reply->deleteLater();
 }
 
@@ -553,7 +716,36 @@ void StudentWidget::onExamInfoReceived(QNetworkReply *reply)
 
 void StudentWidget::updatePhotoStatus(const QString& status)
 {
-    ui->photoStatusLabel->setText("照片状态: " + status);
+    if (!ui->photoStatusLabel) {
+        qDebug() << "警告: photoStatusLabel不存在";
+        return;
+    }
+    
+    // 更新UI显示照片状态
+    ui->photoStatusLabel->setText(status);
+    
+    // 根据状态修改标签样式
+    QString style;
+    
+    if (status.contains("成功")) {
+        style = "QLabel { color: green; font-weight: bold; }";
+    } else if (status.contains("失败") || status.contains("错误")) {
+        style = "QLabel { color: red; font-weight: bold; }";
+    } else if (status.contains("请求")) {
+        style = "QLabel { color: orange; font-weight: bold; }";
+        // 启用上传照片按钮
+        ui->uploadPhotoButton->setEnabled(true);
+        ui->uploadPhotoButton->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; font-weight: bold; }");
+    } else if (status.contains("上传")) {
+        style = "QLabel { color: blue; font-weight: bold; }";
+    } else {
+        style = "QLabel { color: black; }";
+    }
+    
+    ui->photoStatusLabel->setStyleSheet(style);
+    
+    // 记录到控制台
+    qDebug() << "照片状态更新为:" << status;
 }
 
 void StudentWidget::displayPhoto(const QPixmap& photo)
@@ -566,4 +758,359 @@ void StudentWidget::displayPhoto(const QPixmap& photo)
     // 设置预览
     ui->photoPreviewLabel->setPixmap(scaledPhoto);
     ui->photoPreviewLabel->setScaledContents(true);
+}
+
+// 设置通知系统
+void StudentWidget::setupNotificationSystem()
+{
+    // 每分钟检查一次通知
+    notificationTimer->start(60000);
+    
+    // 立即检查一次通知
+    checkNotifications();
+}
+
+// 检查通知
+void StudentWidget::checkNotifications()
+{
+    if (userToken.isEmpty() || studentId.isEmpty()) {
+        return;
+    }
+    
+    // 准备通知请求
+    QString url = STUDENT_SERVER_URL + "/notifications";
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
+    
+    // 发送GET请求
+    QNetworkReply *reply = networkManager->get(request);
+    
+    // 处理响应
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << "获取通知失败: " << reply->errorString();
+            return;
+        }
+        
+        // 解析响应数据
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject response = doc.object();
+        
+        qDebug() << "通知响应数据:" << QString(responseData);
+        
+        // **修正：检查响应状态，兼容 status: 200 和 status: "success"**
+        bool success = false;
+        if (response.contains("status")) {
+            QJsonValue statusVal = response["status"];
+            if (statusVal.isString()) {
+                success = (statusVal.toString() == "success");
+            } else if (statusVal.isDouble()) { // JSON numbers are often doubles
+                success = (statusVal.toInt() == 200);
+            }
+        } else if (response.contains("success")) {
+            success = response["success"].toBool();
+        }
+        
+        if (success) {
+            QJsonArray notifications;
+            
+            // 尝试不同的响应格式
+            if (response.contains("notifications") && response["notifications"].isArray()) {
+                notifications = response["notifications"].toArray();
+            } else if (response.contains("data") && response["data"].isArray()) {
+                notifications = response["data"].toArray();
+            }
+            
+            qDebug() << "收到通知数量:" << notifications.size();
+            
+            // 更新通知UI
+            updateNotificationUI(notifications);
+            
+            // 处理通知 (包括弹出提示框)
+            processNotifications(notifications);
+        } else {
+            QString errorMsg = response.contains("message") ? response["message"].toString() : "未知错误或状态不成功";
+            qDebug() << "获取通知失败(逻辑判断): " << errorMsg;
+            // 可选：如果希望明确告知用户，可以取消下面的注释
+            // QMessageBox::warning(this, "通知错误", "获取通知失败: " + errorMsg);
+        }
+    });
+}
+
+void StudentWidget::processNotifications(const QJsonArray &notifications)
+{
+    // **移除冗余的按钮更新逻辑** 
+    // int unreadCount = 0; // 计数移到 updateNotificationUI 中完成
+
+    // 遍历所有通知
+    for (const QJsonValue &val : notifications) {
+        QJsonObject notification = val.toObject();
+        
+        // 检查通知是否已读
+        if (!notification["read"].toBool()) {
+           // unreadCount++; // 不在此处计数
+            
+            // 根据通知类型处理通知
+            QString type = notification["type"].toString();
+            
+            if (type == "PHOTO_REQUEST" || type == "photo_request") { // 兼容大小写
+                // 处理照片请求通知
+                onPhotoRequestNotificationReceived(notification);
+            }
+            // 可以根据需要添加其他类型的通知处理
+        }
+    }
+    
+    // **移除冗余的按钮更新**
+    // if (unreadCount > 0) { ... } else { ... }
+}
+
+void StudentWidget::onPhotoRequestNotificationReceived(const QJsonObject &notification)
+{
+    // 当收到照片请求通知时，显示消息框提醒用户
+    QString title = notification["title"].toString();
+    QString content = notification["content"].toString();
+    
+    // 使用消息框显示通知
+    QMessageBox::information(this, "照片请求", 
+                            QString("%1\n\n%2").arg(title, content));
+    
+    // 可以在这里添加其他逻辑，例如自动打开上传照片的界面
+    // 例如: onUploadPhotoButtonClicked();
+}
+
+void StudentWidget::updateUnreadNotificationsCount()
+{
+    // 此方法可能已经在updateNotificationUI中被处理，
+    // 或者可以在这里添加额外的逻辑来计算未读通知
+    
+    // 如果需要立即检查通知数量，可以调用检查通知的方法
+    checkNotifications();
+}
+
+void StudentWidget::loadUserInfo()
+{
+    // 如果已经有用户信息，直接显示
+    if (!userName.isEmpty() && !studentId.isEmpty()) {
+        ui->nameLabel->setText("姓名: " + userName);
+        ui->studentIdLabel->setText("学号: " + studentId);
+    } else {
+        qDebug() << "用户信息未设置，无法加载";
+    }
+}
+
+void StudentWidget::markNotificationAsRead(qint64 notificationId)
+{
+    if (userToken.isEmpty()) {
+        qDebug() << "用户未登录，无法标记通知为已读";
+        return;
+    }
+    
+    // 准备标记通知请求
+    QString url = STUDENT_SERVER_URL + "/notifications/read";
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + userToken.toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    // 准备请求数据
+    QJsonObject requestData;
+    requestData["id"] = notificationId;
+    
+    // 发送POST请求（服务器需要POST方法）
+    QNetworkReply *reply = networkManager->post(request, QJsonDocument(requestData).toJson());
+    
+    // 处理响应
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << "标记通知为已读失败: " << reply->errorString();
+            QMessageBox::warning(this, "错误", "标记通知为已读失败: " + reply->errorString());
+            return;
+        }
+        
+        // 解析响应数据
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject response = doc.object();
+        
+        bool success = false;
+        if (response.contains("status") && response["status"].toString() == "success") {
+            success = true;
+        } else if (response.contains("success")) {
+            success = response["success"].toBool();
+        }
+        
+        if (success) {
+            qDebug() << "通知已标记为已读";
+            // 刷新通知列表
+            checkNotifications();
+        } else {
+            QString errorMsg = response["message"].toString();
+            if (errorMsg.isEmpty()) {
+                errorMsg = "未知错误";
+            }
+            qDebug() << "标记通知为已读失败: " << errorMsg;
+            QMessageBox::warning(this, "错误", "标记通知为已读失败: " + errorMsg);
+        }
+    });
+}
+
+// 确保照片URL是完整的
+QString StudentWidget::ensureFullPhotoUrl(const QString &photoUrl) {
+    if (photoUrl.isEmpty()) {
+        return "";
+    }
+    
+    // 如果已经是完整URL，直接返回
+    if (photoUrl.startsWith("http://") || photoUrl.startsWith("https://")) {
+        return photoUrl;
+    }
+    
+    // 确保URL以斜杠开头
+    QString normalizedUrl = photoUrl;
+    if (!normalizedUrl.startsWith("/")) {
+        normalizedUrl = "/" + normalizedUrl;
+    }
+    
+    // 服务器地址
+    QString fullUrl = STUDENT_SERVER_URL + normalizedUrl;
+    qDebug() << "原始照片URL:" << photoUrl << "，完整URL:" << fullUrl;
+    return fullUrl;
+}
+
+void StudentWidget::updateNotificationUI(const QJsonArray &notifications)
+{
+    // 清除现有通知
+    QLayout *layout = ui->notificationsLayout;
+    while (layout->count() > 0) {
+        QLayoutItem *item = layout->takeAt(0);
+        if (item->widget()) {
+            delete item->widget();
+        }
+        delete item;
+    }
+    
+    // 如果没有通知，显示"暂无通知"消息
+    if (notifications.isEmpty()) {
+        QLabel *noNotificationsLabel = new QLabel("暂无通知", ui->notificationsScrollAreaContents);
+        noNotificationsLabel->setAlignment(Qt::AlignCenter);
+        noNotificationsLabel->setStyleSheet("color: gray; padding: 20px;");
+        layout->addWidget(noNotificationsLabel);
+        
+        ui->notificationButton->setText("通知");
+        ui->notificationButton->setStyleSheet("");
+        
+        ui->notificationsFrame->setVisible(false);
+        return;
+    }
+    
+    // 添加新通知
+    int unreadCount = 0;
+    
+    for (const QJsonValue &val : notifications) {
+        QJsonObject notification = val.toObject();
+        bool isRead = notification["read"].toBool();
+        
+        if (!isRead) {
+            unreadCount++;
+        }
+        
+        // 创建通知框架
+        QFrame *notificationFrame = new QFrame(ui->notificationsScrollAreaContents);
+        notificationFrame->setFrameShape(QFrame::StyledPanel);
+        notificationFrame->setStyleSheet(QString(
+            "background-color: %1;"
+            "border-radius: 5px;"
+            "margin: 5px;"
+            "padding: 8px;"
+            "border: 1px solid %2;"
+        ).arg(isRead ? "white" : "#E3F2FD", isRead ? "#DDDDDD" : "#2196F3"));
+        
+        QVBoxLayout *vLayout = new QVBoxLayout(notificationFrame);
+        vLayout->setSpacing(8);
+        vLayout->setContentsMargins(10, 10, 10, 10);
+        
+        // **修正：尝试从不同字段获取标题和内容**
+        QString title = notification.contains("title") ? notification["title"].toString() : "通知"; // 默认标题
+        QString content = notification.contains("message") ? notification["message"].toString() 
+                          : (notification.contains("content") ? notification["content"].toString() : ""); // 优先用 message
+
+        // 通知标题
+        QLabel *titleLabel = new QLabel(title, notificationFrame);
+        titleLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
+        vLayout->addWidget(titleLabel);
+        
+        // 通知内容
+        QLabel *contentLabel = new QLabel(content, notificationFrame);
+        contentLabel->setWordWrap(true);
+        contentLabel->setStyleSheet("color: #333333; margin-top: 5px;");
+        vLayout->addWidget(contentLabel);
+        
+        // 通知时间
+        QDateTime timestamp = QDateTime::fromString(notification["createdAt"].toString(), Qt::ISODate);
+        QLabel *timeLabel = new QLabel(timestamp.toString("yyyy-MM-dd hh:mm"), notificationFrame);
+        timeLabel->setStyleSheet("color: gray; font-size: 10px; margin-top: 5px;");
+        vLayout->addWidget(timeLabel);
+        
+        // 已读/未读状态操作按钮
+        QHBoxLayout *statusLayout = new QHBoxLayout();
+        statusLayout->addStretch();
+        
+        // 已读/标记为已读按钮
+        QPushButton *markAsReadButton = new QPushButton(isRead ? "已读" : "标记为已读", notificationFrame);
+        markAsReadButton->setStyleSheet(QString(
+            "QPushButton {"
+            "    background-color: %1;"
+            "    color: %2;"
+            "    border-radius: 3px;"
+            "    padding: 5px 10px;"
+            "    font-weight: bold;"
+            "    border: none;"
+            "}"
+            "QPushButton:hover {"
+            "    background-color: %3;"
+            "}"
+        ).arg(
+            isRead ? "#EEEEEE" : "#2196F3",
+            isRead ? "#999999" : "white",
+            isRead ? "#DDDDDD" : "#1976D2"
+        ));
+        
+        markAsReadButton->setCursor(Qt::PointingHandCursor);
+        markAsReadButton->setMinimumWidth(100);
+        
+        // 如果通知未读，添加点击事件
+        if (!isRead) {
+            int notificationId = notification["id"].toInt();
+            connect(markAsReadButton, &QPushButton::clicked, this, [=]() {
+                markAsReadButton->setText("更新中...");
+                markAsReadButton->setEnabled(false);
+                
+                // 标记通知为已读
+                markNotificationAsRead(notificationId);
+            });
+        }
+        
+        statusLayout->addWidget(markAsReadButton);
+        vLayout->addLayout(statusLayout);
+        
+        // 将通知添加到通知列表
+        ui->notificationsLayout->addWidget(notificationFrame);
+    }
+    
+    // 显示通知面板
+    ui->notificationsFrame->setVisible(true);
+    
+    // 更新通知按钮显示未读数量
+    if (unreadCount > 0) {
+        ui->notificationButton->setText(QString("通知 (%1)").arg(unreadCount));
+        ui->notificationButton->setStyleSheet("background-color: #FF5722; color: white;");
+    } else {
+        ui->notificationButton->setText("通知");
+        ui->notificationButton->setStyleSheet("");
+    }
 } 

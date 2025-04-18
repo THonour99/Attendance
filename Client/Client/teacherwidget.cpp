@@ -16,6 +16,15 @@
 #include <QAxObject>
 #include <QDir>
 #include <QTimer>
+#include <QStandardItemModel>
+#include <QDialogButtonBox>
+#include <QScrollArea>
+#include <QGroupBox>
+#include <QFormLayout>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <QAxObject>
+#include <QSet> // Ensure QSet is included
 
 // 服务器地址
 const QString TEACHER_SERVER_URL = "http://localhost:8080";
@@ -31,31 +40,85 @@ TeacherWidget::TeacherWidget(const QJsonObject &userInfo, const QString &token, 
     examRoomsModel(new QStandardItemModel(this)),
     attendanceModel(new QStandardItemModel(this)),
     linkedClassesModel(new QStandardItemModel(this)),
-    seatsModel(new QStandardItemModel(this))
+    seatsModel(new QStandardItemModel(this)),
+    photoRefreshTimer(new QTimer(this)),
+    repliesBeingProcessed() // ** 初始化 QSet **
 {
     ui->setupUi(this);
     setupUI();
     
     // 连接网络响应信号 - 修改处理逻辑，区分HTTP方法
     connect(networkManager, &QNetworkAccessManager::finished, this, [this](QNetworkReply *reply) {
+        if (!reply) {
+            qDebug() << "[Global Handler] Received null reply, ignoring.";
+            return;
+        }
+
+        // 检查 reply 是否已被标记为正在处理
+        if (repliesBeingProcessed.contains(reply)) {
+             qDebug() << "[Global Handler] Reply for" << reply->request().url().path() << "is already being processed, ignoring.";
+             // 不在此处 deleteLater，由具体处理函数负责
+             return;
+        }
+        
+        if (reply->error() == QNetworkReply::OperationCanceledError || reply->error() == QNetworkReply::RemoteHostClosedError) {
+            qDebug() << "[Global Handler] Reply aborted or host closed, deleting.";
+            reply->deleteLater();
+            return;
+        }
+
         QString endpoint = reply->request().url().path();
         QNetworkAccessManager::Operation operation = reply->operation();
-        
-        // 只对GET请求使用全局处理
+        bool handled = false; 
+
         if (operation == QNetworkAccessManager::GetOperation) {
-            if (endpoint.contains("/teacher/classes") && !endpoint.contains("students")) {
+             // **标记 reply 正在被处理**
+             repliesBeingProcessed.insert(reply);
+             qDebug() << "[Global Handler] Processing GET reply for:" << endpoint;
+
+            if (endpoint.contains("/teacher/classes") && !endpoint.contains("/students")) {
                 onClassesDataReceived(reply);
-            } else if (endpoint.contains("/teacher/classes") && endpoint.contains("students")) {
+                handled = true; 
+            } else if (endpoint.contains("/teacher/classes") && endpoint.contains("/students")) {
                 onStudentsDataReceived(reply);
-            } else if (endpoint.contains("/teacher/examrooms") && !endpoint.contains("attendance") && !endpoint.contains("seats") && !endpoint.contains("classes")) {
+                handled = true; 
+            } else if (endpoint.contains("/teacher/examrooms") && !endpoint.contains("/attendance") && !endpoint.contains("/seats") && !endpoint.contains("/classes")) {
                 onExamRoomsDataReceived(reply);
-            } else if (endpoint.contains("/teacher/examrooms") && endpoint.contains("attendance")) {
+                handled = true; 
+            } else if (endpoint.contains("/teacher/examrooms") && endpoint.contains("/attendance")) {
                 onExamAttendanceDataReceived(reply);
-            } else if (endpoint.contains("/teacher/student") && endpoint.contains("photo")) {
+                handled = true; 
+            } else if (endpoint.contains("/teacher/student") && endpoint.contains("/photo")) {
                 onStudentPhotoReceived(reply);
+                handled = true; 
+            } else if (endpoint.contains("/teacher/examrooms") && endpoint.contains("/classes")) {
+                 onClassesLinkedReceived(reply); // 处理获取关联班级的响应
+                 handled = true;
+            } else if (endpoint.contains("/teacher/examrooms") && endpoint.contains("/seats")) {
+                // 座位获取通常在此触发，但我们应确保在 onExamRoomSelected 中处理
+                // loadExamSeats(currentExamRoomId); // 不在此处直接调用
+                 qDebug() << "[Global Handler] GET /seats endpoint detected, assuming handled by specific logic.";
+                 handled = true; // 标记为已处理，避免下面删除
+            } else if (endpoint.contains("/teacher/students/photos")) {
+                 // 处理获取班级所有照片状态的响应
+                 onViewStudentPhotosFinished(reply); // 需要一个处理函数
+                 handled = true;
             }
+             // 如果标记了处理，则从 set 中移除
+            if (handled) {
+                 repliesBeingProcessed.remove(reply);
+            }
+        } else { 
+            qDebug() << "[Global Handler] Ignoring non-GET operation for endpoint:" << endpoint;
+            handled = true; // 假设 POST/PUT/DELETE 由其他 connect 处理
         }
-        // 其他操作（POST/PUT/DELETE）由各自的专门回调处理
+
+        // 如果 GET 请求未被上述任何 if/else if 处理，则删除
+        if (operation == QNetworkAccessManager::GetOperation && !handled && reply) {
+            qDebug() << "[Global Handler] Unhandled GET reply for" << endpoint << ", deleting.";
+             repliesBeingProcessed.remove(reply); // 确保从 set 中移除
+            reply->deleteLater();
+        }
     });
     
     // 连接班级管理相关信号
@@ -85,6 +148,9 @@ TeacherWidget::TeacherWidget(const QJsonObject &userInfo, const QString &token, 
     // 加载初始数据
     loadClassesData();
     loadExamRoomsData();
+    
+    // 设置照片刷新定时器
+    setupClassPhotoRefresh();
 }
 
 TeacherWidget::~TeacherWidget()
@@ -316,19 +382,43 @@ void TeacherWidget::onStudentsDataReceived(QNetworkReply *reply)
                 
                 QList<QStandardItem*> row;
                 
-                // 创建并设置每个单元格
-                QStandardItem *nameItem = new QStandardItem(student["name"].toString());
-                nameItem->setTextAlignment(Qt::AlignCenter);
-                nameItem->setData(student["id"].toString(), Qt::UserRole);
+                // --- 修正开始 ---
+                QString originalName = student["name"].toString();
+                QString studentName = originalName; // 默认使用原始名称
+                QString studentClassName = student["className"].toString(); // 从 className 字段获取
+
+                // 如果姓名包含 "-"，尝试分离班级和姓名
+                if (originalName.contains("-")) {
+                    QStringList parts = originalName.split("-");
+                    if (parts.size() >= 2) {
+                         // 如果 className 字段为空，则使用分离出的班级名
+                         if (studentClassName.isEmpty()) {
+                             studentClassName = parts[0].trimmed();
+                         }
+                         // 使用分离出的学生姓名
+                        studentName = parts[1].trimmed(); 
+                    }
+                }
                 
-                QStandardItem *idItem = new QStandardItem(student["studentId"].toString());
+                QStandardItem *nameItem = new QStandardItem(studentName); // 使用处理后的姓名
+                nameItem->setTextAlignment(Qt::AlignCenter);
+                if (student.contains("id")) {
+                    nameItem->setData(student["id"].toVariant(), Qt::UserRole);
+                    qDebug() << "[StudentData] Setting UserRole for" << studentName << "to ID:" << student["id"].toVariant();
+                } else {
+                    qDebug() << "[StudentData] Warning: Student object missing 'id' field for" << studentName;
+                }
+                
+                QStandardItem *idItem = new QStandardItem(student["studentId"].toString()); // 学号列
                 idItem->setTextAlignment(Qt::AlignCenter);
                 
-                QStandardItem *classItem = new QStandardItem(student["className"].toString());
+                QStandardItem *classItem = new QStandardItem(studentClassName); // 使用获取或分离出的班级名
                 classItem->setTextAlignment(Qt::AlignCenter);
                 
-                // 添加行数据
-                row << nameItem << idItem << classItem;
+                // 添加所有项到行数据
+                row << nameItem << idItem << classItem; 
+                // --- 修正结束 ---
+                
                 studentsModel->appendRow(row);
             }
             
@@ -544,48 +634,49 @@ void TeacherWidget::onExamRoomSelected(const QModelIndex &index)
 
 void TeacherWidget::onAddClassClicked()
 {
-    bool ok;
-    QString className = QInputDialog::getText(this, "添加班级", "请输入班级名称:", QLineEdit::Normal, "", &ok);
+    QDialog dialog(this);
+    dialog.setWindowTitle("添加班级");
     
-    if (ok && !className.isEmpty()) {
-        // 准备添加班级请求
-        QUrl url(TEACHER_SERVER_URL + "/teacher/classes");
-        QNetworkRequest request(url);
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    
+    QHBoxLayout* nameLayout = new QHBoxLayout();
+    QLabel* nameLabel = new QLabel("班级名称:", &dialog);
+    QLineEdit* nameEdit = new QLineEdit(&dialog);
+    nameLayout->addWidget(nameLabel);
+    nameLayout->addWidget(nameEdit);
+    
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    
+    layout->addLayout(nameLayout);
+    layout->addWidget(buttonBox);
+    
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        QString className = nameEdit->text().trimmed();
+        if (className.isEmpty()) {
+            showMessage("班级名称不能为空", true);
+            return;
+        }
+        
+        QJsonObject requestData;
+        requestData["name"] = className;
+        
+        QNetworkRequest request(QUrl("http://localhost:3000/api/classes"));
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
         
-        // 构建添加班级数据
-        QJsonObject classData;
-        classData["className"] = className;
-        QJsonDocument doc(classData);
+        QJsonDocument doc(requestData);
+        QByteArray data = doc.toJson();
         
-        // 发送请求
-        QNetworkReply *reply = networkManager->post(request, doc.toJson());
-        
-        // 处理响应
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-            if (reply->error() != QNetworkReply::NoError) {
-                QMessageBox::warning(this, "网络错误", "添加班级失败: " + reply->errorString());
-                reply->deleteLater();
-                return;
+        QNetworkReply* reply = networkManager->post(request, data);
+        connect(reply, &QNetworkReply::finished, [this, reply]() {
+            QJsonObject response = parseResponse(reply);
+            if (!response.isEmpty()) {
+                showMessage("班级添加成功");
+                loadClassesData();
             }
-            
-            // 解析响应
-            QByteArray responseData = reply->readAll();
-            QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
-            QJsonObject jsonObject = jsonResponse.object();
-            
-            if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
-                QMessageBox::information(this, "成功", "班级添加成功");
-                loadClassesData(); // 刷新班级列表
-            } else {
-                QString errorMessage = "添加班级失败";
-                if (jsonObject.contains("message")) {
-                    errorMessage = jsonObject["message"].toString();
-                }
-                QMessageBox::warning(this, "错误", errorMessage);
-            }
-            
             reply->deleteLater();
         });
     }
@@ -1410,33 +1501,130 @@ void TeacherWidget::onViewStudentPhotoClicked()
 {
     // 检查是否选择了学生
     QModelIndex index = ui->studentsTableView->currentIndex();
+    qDebug() << "[ViewPhoto] Current index valid?" << index.isValid();
+
     if (!index.isValid()) {
         QMessageBox::warning(this, "警告", "请先选择一个学生");
         return;
     }
-    
+
+    qDebug() << "[ViewPhoto] Selected row:" << index.row() << "column:" << index.column();
+
+    // **显式获取第0列的索引**
+    QModelIndex nameIndex = studentsModel->index(index.row(), 0);
+    if (!nameIndex.isValid()) {
+         QMessageBox::warning(this, "错误", "无法获取姓名单元格的索引");
+         qDebug() << "[ViewPhoto] Failed to get valid index for column 0.";
+         return;
+    }
+    qDebug() << "[ViewPhoto] Index for column 0 (name) valid?" << nameIndex.isValid();
+
+
     // 获取学生ID
-    currentStudentId = studentsModel->data(studentsModel->index(index.row(), 0), Qt::UserRole).toString();
-    QString studentName = studentsModel->data(studentsModel->index(index.row(), 0)).toString();
-    
+    QVariant idData = studentsModel->data(nameIndex, Qt::UserRole);
+    currentStudentId = idData.toString();
+    qDebug() << "[ViewPhoto] Attempting to get student ID from UserRole (column 0). Is data valid?" << idData.isValid() << "Value:" << currentStudentId;
+
+
+    QString studentName = studentsModel->data(nameIndex).toString();
+    qDebug() << "[ViewPhoto] Student Name from model:" << studentName;
+
+    // **添加检查：确保 currentStudentId 不为空**
+    if (currentStudentId.isEmpty()) {
+        // 添加更详细的错误提示
+        QMessageBox::warning(this, "错误", QString("无法获取学生 '%1' 的ID (行: %2)。请确保学生数据已正确加载。").arg(studentName).arg(index.row()));
+        qDebug() << "[ViewPhoto] Failed to get Student ID for row:" << index.row() << "Name:" << studentName;
+        
+        // 尝试打印该行所有列的数据和UserRole以供调试
+        for (int col = 0; col < studentsModel->columnCount(); ++col) {
+            QModelIndex checkIndex = studentsModel->index(index.row(), col);
+            if (checkIndex.isValid()) {
+                 qDebug() << "  [Debug] Col:" << col << "Display Data:" << studentsModel->data(checkIndex, Qt::DisplayRole).toString()
+                          << "UserRole Data:" << studentsModel->data(checkIndex, Qt::UserRole).toString();
+            }
+        }
+        return;
+    }
+
+    qDebug() << "[ViewPhoto] Successfully retrieved Student ID:" << currentStudentId << "Name:" << studentName;
+
     // 准备请求
     QUrl url(TEACHER_SERVER_URL + "/teacher/student/" + currentStudentId + "/photo");
+    qDebug() << "[ViewPhoto] Requesting photo URL:" << url.toString();
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
     
     // 显示加载中消息
-    QMessageBox::information(this, "加载中", "正在获取学生照片...");
+    // QMessageBox::information(this, "加载中", "正在获取学生照片..."); // 改为非阻塞
+    qDebug() << "[ViewPhoto] Sending request to get student photo URL...";
     
     // 发送请求
-    networkManager->get(request);
+    QNetworkReply *reply = networkManager->get(request);
+    // 连接处理函数
+     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        onStudentPhotoReceived(reply);
+    });
+}
+
+// 检查服务器返回的照片URL，确保它是完整URL
+QString TeacherWidget::ensureFullPhotoUrl(const QString &photoUrl)
+{
+    if (photoUrl.isEmpty()) {
+        qDebug() << "警告: 收到空的照片URL";
+        return QString();
+    }
+    
+    // 调试输出原始URL
+    qDebug() << "原始照片URL:" << photoUrl;
+    
+    QString fullUrl;
+    
+    if (photoUrl.startsWith("http")) {
+        // 已经是完整URL
+        fullUrl = photoUrl;
+    } else if (photoUrl.startsWith("/uploads/")) {
+        // 服务器上的uploads目录，需要拼接完整URL
+        // 使用正确的服务器地址，确保端口号一致
+        // 注意：这里使用硬编码的服务器地址和端口，确保与服务器匹配
+        fullUrl = "http://localhost:8080" + photoUrl;
+        qDebug() << "处理uploads路径，生成URL:" << fullUrl;
+    } else if (photoUrl.startsWith("/")) {
+        // 其他相对路径，以/开头
+        fullUrl = TEACHER_SERVER_URL + photoUrl;
+    } else {
+        // 相对路径，不以/开头
+        fullUrl = TEACHER_SERVER_URL + "/" + photoUrl;
+    }
+    
+    qDebug() << "构建的完整照片URL:" << fullUrl;
+    
+    // 额外检查URL是否有效
+    if (!QUrl(fullUrl).isValid()) {
+        qDebug() << "警告: 生成的URL无效:" << fullUrl;
+        return QString();
+    }
+    
+    return fullUrl;
 }
 
 void TeacherWidget::onStudentPhotoReceived(QNetworkReply *reply)
 {
+    // **在处理开始时检查并标记**
+    if (!reply || repliesBeingProcessed.contains(reply)) {
+         // 如果reply无效或已在处理中，则忽略
+         qDebug() << "[onStudentPhotoReceived] Ignoring invalid or already processed reply.";
+         if (reply) repliesBeingProcessed.remove(reply); // 确保移除
+         // 不在此处调用 deleteLater，因为可能已被删除或将由其他地方删除
+         return; 
+    }
+    // repliesBeingProcessed.insert(reply); // 移到全局处理中标记
+    qDebug() << "[onStudentPhotoReceived] Processing reply for:" << reply->request().url().path();
+
     // 检查网络错误
     if (reply->error() != QNetworkReply::NoError) {
-        QMessageBox::warning(this, "网络错误", "获取学生照片失败: " + reply->errorString());
+        QMessageBox::warning(this, "网络错误", "获取学生照片URL失败: " + reply->errorString());
+        repliesBeingProcessed.remove(reply); // **处理完毕，移除标记**
         reply->deleteLater();
         return;
     }
@@ -1446,38 +1634,60 @@ void TeacherWidget::onStudentPhotoReceived(QNetworkReply *reply)
     QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
     QJsonObject jsonObject = jsonResponse.object();
     
+    qDebug() << "[onStudentPhotoReceived] 学生照片URL响应:" << QString(responseData);
+    
     // 检查响应状态
     if (jsonObject.contains("status") && jsonObject["status"].toInt() == 200) {
         if (jsonObject.contains("data")) {
             // 获取照片URL
             QString photoUrl = jsonObject["data"].toString();
             
-            // 创建对话框显示照片
+            if (photoUrl.isEmpty()) {
+                QMessageBox::warning(this, "错误", "服务器返回的照片URL为空");
+                 repliesBeingProcessed.remove(reply); // **处理完毕，移除标记**
+                reply->deleteLater();
+                return;
+            }
+            
+             // **创建对话框显示照片 (在 lambda 之外创建，确保作用域)**
             QDialog dialog(this);
             dialog.setWindowTitle("学生照片");
             QVBoxLayout *layout = new QVBoxLayout(&dialog);
-            
             QLabel *titleLabel = new QLabel("正在加载照片...");
             titleLabel->setAlignment(Qt::AlignCenter);
             layout->addWidget(titleLabel);
-            
             QLabel *imageLabel = new QLabel();
             imageLabel->setMinimumSize(300, 300);
             imageLabel->setAlignment(Qt::AlignCenter);
             layout->addWidget(imageLabel);
-            
             QPushButton *closeButton = new QPushButton("关闭");
             layout->addWidget(closeButton);
-            
             connect(closeButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+            // 确保photoUrl是完整的URL
+            QString fullPhotoUrl = ensureFullPhotoUrl(photoUrl);
+            
+            if (fullPhotoUrl.isEmpty()) {
+                titleLabel->setText("无效的照片URL");
+                repliesBeingProcessed.remove(reply); // **处理完毕，移除标记**
+                reply->deleteLater(); // 删除第一个请求的 reply
+                dialog.exec(); // 显示带有错误消息的对话框
+                return;
+            }
+            
+            qDebug() << "[onStudentPhotoReceived] 请求实际照片的完整URL:" << fullPhotoUrl;
             
             // 发起另一个请求获取实际照片
+            // **使用 dialog 作为 parent，确保 photoManager 生命周期与对话框一致**
             QNetworkAccessManager *photoManager = new QNetworkAccessManager(&dialog);
-            QNetworkRequest photoRequest(QUrl(TEACHER_SERVER_URL + photoUrl));
+            QNetworkRequest photoRequest;
+            photoRequest.setUrl(QUrl(fullPhotoUrl));
             photoRequest.setRawHeader("Authorization", "Bearer " + token.toUtf8());
             
             QNetworkReply *photoReply = photoManager->get(photoRequest);
-            connect(photoReply, &QNetworkReply::finished, [=]() {
+             // **连接第二个请求的 finished 信号**
+            connect(photoReply, &QNetworkReply::finished, this, [=]() {
+                qDebug() << "[onStudentPhotoReceived lambda] Second request finished. Error:" << photoReply->errorString();
                 if (photoReply->error() == QNetworkReply::NoError) {
                     QByteArray imgData = photoReply->readAll();
                     QPixmap pixmap;
@@ -1486,26 +1696,45 @@ void TeacherWidget::onStudentPhotoReceived(QNetworkReply *reply)
                         titleLabel->setText("学生照片");
                     } else {
                         titleLabel->setText("照片格式无效");
+                         qDebug() << "[onStudentPhotoReceived lambda] Failed to load pixmap from data.";
                     }
                 } else {
                     titleLabel->setText("加载照片失败: " + photoReply->errorString());
+                    qDebug() << "[onStudentPhotoReceived lambda] 照片加载错误:" << photoReply->errorString();
                 }
-                photoReply->deleteLater();
+                photoReply->deleteLater(); // **删除第二个请求的 reply**
             });
             
-            dialog.exec();
+            repliesBeingProcessed.remove(reply); // **移除第一个 reply 的标记**
+            reply->deleteLater(); // **删除第一个请求的 reply**
+            dialog.exec(); // 显示对话框，加载图片
+
         } else {
             QMessageBox::warning(this, "错误", "照片数据不存在");
+            repliesBeingProcessed.remove(reply); // **处理完毕，移除标记**
+            reply->deleteLater();
         }
     } else {
-        QString errorMessage = "获取照片失败";
+        QString errorMessage = "获取照片URL失败";
         if (jsonObject.contains("message")) {
             errorMessage = jsonObject["message"].toString();
         }
         QMessageBox::warning(this, "错误", errorMessage);
+        repliesBeingProcessed.remove(reply); // **处理完毕，移除标记**
+        reply->deleteLater();
     }
-    
-    reply->deleteLater();
+    // **移除函数末尾多余的 deleteLater**
+    // reply->deleteLater(); 
+}
+
+// **添加 onViewStudentPhotosFinished 处理函数（如果需要）**
+void TeacherWidget::onViewStudentPhotosFinished(QNetworkReply *reply) {
+     if (!reply) return;
+     qDebug() << "[onViewStudentPhotosFinished] Processing reply for photos list.";
+     // 这里添加处理 /teacher/students/photos 响应的逻辑
+     // ...
+      repliesBeingProcessed.remove(reply); // 处理完毕，移除标记
+     reply->deleteLater();
 }
 
 void TeacherWidget::onRequestStudentPhotosClicked()
@@ -1528,6 +1757,8 @@ void TeacherWidget::onRequestStudentPhotosClicked()
         return;
     }
     
+    qDebug() << "正在请求班级" << currentClassId << "的学生上传照片";
+    
     // 准备请求数据
     QJsonObject requestData;
     requestData["classId"] = currentClassId;
@@ -1538,6 +1769,10 @@ void TeacherWidget::onRequestStudentPhotosClicked()
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
     
+    // 打印请求详情
+    qDebug() << "请求URL:" << url.toString();
+    qDebug() << "请求数据:" << QJsonDocument(requestData).toJson();
+    
     // 发送请求
     QNetworkReply *reply = networkManager->post(request, QJsonDocument(requestData).toJson());
     
@@ -1545,24 +1780,41 @@ void TeacherWidget::onRequestStudentPhotosClicked()
     connect(reply, &QNetworkReply::finished, this, [=]() {
         // 检查网络错误
         if (reply->error() != QNetworkReply::NoError) {
-            QMessageBox::warning(this, "网络错误", "请求失败: " + reply->errorString());
+            QString errorString = reply->errorString();
+            qDebug() << "照片请求失败:" << errorString;
+            QMessageBox::warning(this, "网络错误", "请求失败: " + errorString);
             reply->deleteLater();
             return;
         }
         
         // 解析响应数据
         QByteArray responseData = reply->readAll();
+        qDebug() << "照片请求响应:" << QString(responseData);
+        
         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
         QJsonObject jsonObject = jsonResponse.object();
         
         // 检查响应状态
         if (jsonObject["status"].toInt() == 200) {
-            QMessageBox::information(this, "成功", "照片请求已发送给所有学生");
+            QJsonObject data = jsonObject["data"].toObject();
+            int totalStudents = data["totalStudents"].toInt();
+            int updatedStudents = data["updatedStudents"].toInt();
+            
+            qDebug() << "照片请求成功 - 总学生:" << totalStudents << "更新学生:" << updatedStudents;
+            
+            QMessageBox::information(this, "成功", 
+                QString("照片请求已发送给班级中的%1名学生。\n%2名学生将收到通知。\n学生登录后将收到提醒。")
+                .arg(totalStudents)
+                .arg(updatedStudents));
+                
+            // 立即刷新照片状态
+            refreshClassPhotosStatus();
         } else {
             QString errorMessage = "请求失败";
             if (jsonObject.contains("message")) {
                 errorMessage = jsonObject["message"].toString();
             }
+            qDebug() << "照片请求失败:" << errorMessage;
             QMessageBox::warning(this, "错误", errorMessage);
         }
         
@@ -1604,6 +1856,8 @@ void TeacherWidget::onViewStudentPhotosClicked()
         
         // 解析响应数据
         QByteArray responseData = reply->readAll();
+        qDebug() << "获取班级照片响应:" << QString(responseData);
+        
         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
         QJsonObject jsonObject = jsonResponse.object();
         
@@ -1676,9 +1930,20 @@ void TeacherWidget::onViewStudentPhotosClicked()
                 // 设置加载中提示
                 photoLabel->setText("正在加载照片...");
                 
+                // 确保photoUrl是完整的URL
+                QString fullPhotoUrl = ensureFullPhotoUrl(photoUrl);
+                
+                if (fullPhotoUrl.isEmpty()) {
+                    photoLabel->setText("照片URL无效");
+                    continue;
+                }
+                
+                qDebug() << "请求班级照片的完整URL:" << fullPhotoUrl;
+                
                 // 加载照片
                 QNetworkAccessManager *photoManager = new QNetworkAccessManager(photoLabel);
-                QNetworkRequest photoRequest(QUrl(TEACHER_SERVER_URL + photoUrl));
+                QNetworkRequest photoRequest;
+                photoRequest.setUrl(QUrl(fullPhotoUrl));
                 photoRequest.setRawHeader("Authorization", "Bearer " + token.toUtf8());
                 
                 QNetworkReply *photoReply = photoManager->get(photoRequest);
@@ -1693,6 +1958,7 @@ void TeacherWidget::onViewStudentPhotosClicked()
                         }
                     } else {
                         photoLabel->setText("网络错误: " + photoReply->errorString());
+                        qDebug() << "班级照片加载错误:" << photoReply->errorString();
                     }
                     photoReply->deleteLater();
                 });
@@ -1807,4 +2073,629 @@ void TeacherWidget::onLinkClassesClicked()
     // 这个函数可能是当初计划用于链接班级的功能，但后来被onLinkClassButtonClicked取代
     // 为了保持兼容性，我们将调用该函数
     onLinkClassButtonClicked();
+}
+
+// 设置照片刷新定时器
+void TeacherWidget::setupClassPhotoRefresh()
+{
+    // 连接定时器到刷新方法
+    connect(photoRefreshTimer, &QTimer::timeout, this, &TeacherWidget::refreshClassPhotosStatus);
+    
+    // 禁用自动刷新，改为手动刷新
+    // photoRefreshTimer->start(60000);
+    
+    // 输出日志，表明不再自动刷新照片状态
+    qDebug() << "照片状态刷新已设置为手动模式，不会自动弹出照片对话框";
+}
+
+// 刷新班级照片状态
+void TeacherWidget::refreshClassPhotosStatus()
+{
+    qDebug() << "Checking class photos status...";
+    QString currentClassId = ui->classesListView->currentIndex().data(Qt::UserRole).toString();
+    
+    if (!currentClassId.isEmpty() && !token.isEmpty()) {
+        QUrl url(TEACHER_SERVER_URL + "/teacher/students/photos?classId=" + currentClassId);
+        QNetworkRequest request(url);
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+        
+        QNetworkReply* reply = networkManager->get(request);
+        
+        connect(reply, &QNetworkReply::finished, [this, reply]() {
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray responseData = reply->readAll();
+                QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+                QJsonObject responseObj = responseDoc.object();
+                
+                // 检查照片状态变化，如有必要更新UI
+                if (responseObj["status"].toInt() == 200 && responseObj.contains("data")) {
+                    QJsonArray studentsData = responseObj["data"].toArray();
+                    int uploadedCount = 0;
+                    int requestedCount = 0;
+                    
+                    for (const QJsonValue &val : studentsData) {
+                        QJsonObject student = val.toObject();
+                        QString status = student["photoStatus"].toString();
+                        
+                        if (status == "uploaded") {
+                            uploadedCount++;
+                        } else if (status == "requested") {
+                            requestedCount++;
+                        }
+                    }
+                    
+                    // 更新状态标签 - 使用studentsLabel代替不存在的photoStatusLabel
+                    QString originalText = ui->studentsLabel->text();
+                    ui->studentsLabel->setText(
+                        QString("班级学生 - 照片状态: %1/%2 已上传, %3/%4 等待上传")
+                        .arg(uploadedCount)
+                        .arg(studentsData.size())
+                        .arg(requestedCount)
+                        .arg(studentsData.size())
+                    );
+                }
+            }
+            
+            reply->deleteLater();
+        });
+    }
+}
+
+void TeacherWidget::onLogoutButtonClicked()
+{
+    // 确认退出
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "确认", 
+        "确定要退出登录吗?",
+        QMessageBox::Yes | QMessageBox::No);
+    
+    if (reply == QMessageBox::Yes) {
+        // 发送退出登录信号
+        emit this->close();
+    }
+}
+
+void TeacherWidget::onRefreshClassesButtonClicked()
+{
+    // 刷新班级数据
+    loadClassesData();
+    
+    // 如果当前有选中的班级，也刷新学生列表
+    if (!currentClassId.isEmpty()) {
+        loadStudentsInClass(currentClassId);
+    }
+}
+
+void TeacherWidget::onAddClassButtonClicked()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle("添加班级");
+    
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    
+    QHBoxLayout* nameLayout = new QHBoxLayout();
+    QLabel* nameLabel = new QLabel("班级名称:", &dialog);
+    QLineEdit* nameEdit = new QLineEdit(&dialog);
+    nameLayout->addWidget(nameLabel);
+    nameLayout->addWidget(nameEdit);
+    
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    
+    layout->addLayout(nameLayout);
+    layout->addWidget(buttonBox);
+    
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        QString className = nameEdit->text().trimmed();
+        if (className.isEmpty()) {
+            showMessage("班级名称不能为空", true);
+            return;
+        }
+        
+        QJsonObject requestData;
+        requestData["name"] = className;
+        
+        QNetworkRequest request(QUrl("http://localhost:3000/api/classes"));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+        
+        QJsonDocument doc(requestData);
+        QByteArray data = doc.toJson();
+        
+        QNetworkReply* reply = networkManager->post(request, data);
+        connect(reply, &QNetworkReply::finished, [this, reply]() {
+            QJsonObject response = parseResponse(reply);
+            if (!response.isEmpty()) {
+                showMessage("班级添加成功");
+                loadClassesData();
+            }
+            reply->deleteLater();
+        });
+    }
+}
+
+void TeacherWidget::onEditClassButtonClicked()
+{
+    // 获取当前选中的班级
+    QModelIndex index = ui->classesListView->currentIndex();
+    if (!index.isValid()) {
+        QMessageBox::warning(this, "警告", "请先选择一个班级");
+        return;
+    }
+    
+    QString classId = classesModel->data(index, Qt::UserRole).toString();
+    QString currentClassName = classesModel->data(index).toString();
+    
+    // 弹出对话框编辑班级名称
+    bool ok;
+    QString newClassName = QInputDialog::getText(this, "编辑班级", 
+        "请输入新的班级名称:", QLineEdit::Normal, currentClassName, &ok);
+    
+    if (ok && !newClassName.isEmpty() && newClassName != currentClassName) {
+        // 准备编辑班级请求
+        QUrl url(TEACHER_SERVER_URL + "/teacher/classes/" + classId);
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+        
+        // 构建请求数据
+        QJsonObject classData;
+        classData["className"] = newClassName;
+        QJsonDocument doc(classData);
+        
+        // 发送请求
+        QNetworkReply *reply = networkManager->put(request, doc.toJson());
+        
+        // 处理响应
+        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+            if (reply->error() != QNetworkReply::NoError) {
+                QMessageBox::warning(this, "网络错误", "编辑班级失败: " + reply->errorString());
+                reply->deleteLater();
+                return;
+            }
+            
+            // 解析响应
+            QByteArray responseData = reply->readAll();
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+            QJsonObject jsonObject = jsonResponse.object();
+            
+            if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+                QMessageBox::information(this, "成功", "班级编辑成功");
+                loadClassesData(); // 刷新班级列表
+            } else {
+                QString errorMessage = "编辑班级失败";
+                if (jsonObject.contains("message")) {
+                    errorMessage = jsonObject["message"].toString();
+                }
+                QMessageBox::warning(this, "错误", errorMessage);
+            }
+            
+            reply->deleteLater();
+        });
+    }
+}
+
+void TeacherWidget::onDeleteClassButtonClicked()
+{
+    // 获取当前选中的班级
+    QModelIndex index = ui->classesListView->currentIndex();
+    if (!index.isValid()) {
+        QMessageBox::warning(this, "警告", "请先选择一个班级");
+        return;
+    }
+    
+    QString classId = classesModel->data(index, Qt::UserRole).toString();
+    QString className = classesModel->data(index).toString();
+    
+    // 确认删除
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "确认", 
+        QString("确定要删除班级 %1 吗?").arg(className),
+        QMessageBox::Yes | QMessageBox::No);
+    
+    if (reply == QMessageBox::Yes) {
+        // 准备删除班级请求
+        QUrl url(TEACHER_SERVER_URL + "/teacher/classes/" + classId);
+        QNetworkRequest request(url);
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+        
+        // 发送请求
+        QNetworkReply *deleteReply = networkManager->deleteResource(request);
+        
+        // 处理响应
+        connect(deleteReply, &QNetworkReply::finished, this, [this, deleteReply, className]() {
+            if (deleteReply->error() != QNetworkReply::NoError) {
+                QMessageBox::warning(this, "网络错误", "删除班级失败: " + deleteReply->errorString());
+                deleteReply->deleteLater();
+                return;
+            }
+            
+            // 解析响应
+            QByteArray responseData = deleteReply->readAll();
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+            QJsonObject jsonObject = jsonResponse.object();
+            
+            if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+                QMessageBox::information(this, "成功", QString("班级 %1 已删除").arg(className));
+                loadClassesData(); // 刷新班级列表
+                
+                // 清空学生列表
+                studentsModel->removeRows(0, studentsModel->rowCount());
+            } else {
+                QString errorMessage = "删除班级失败";
+                if (jsonObject.contains("message")) {
+                    errorMessage = jsonObject["message"].toString();
+                }
+                QMessageBox::warning(this, "错误", errorMessage);
+            }
+            
+            deleteReply->deleteLater();
+        });
+    }
+}
+
+void TeacherWidget::onStudentDataReceived(QNetworkReply* reply)
+{
+    // 这个方法可能是冗余的，功能已由onStudentsDataReceived实现
+    // 为了兼容性保留，简单地调用现有方法
+    onStudentsDataReceived(reply);
+}
+
+void TeacherWidget::onAddStudentButtonClicked()
+{
+    // 这个方法可能是冗余的，功能已由onAddStudentToClassClicked实现
+    // 为了兼容性保留，简单地调用现有方法
+    onAddStudentToClassClicked();
+}
+
+void TeacherWidget::onEditStudentButtonClicked()
+{
+    // 获取当前选中的学生
+    QModelIndex index = ui->studentsTableView->currentIndex();
+    if (!index.isValid()) {
+        QMessageBox::warning(this, "警告", "请先选择一个学生");
+        return;
+    }
+    
+    int row = index.row();
+    QString studentId = studentsModel->item(row, 0)->data(Qt::UserRole).toString();
+    QString studentName = studentsModel->item(row, 0)->text();
+    QString studentNumber = studentsModel->item(row, 1)->text();
+    
+    // 创建编辑对话框
+    QDialog dialog(this);
+    dialog.setWindowTitle("编辑学生信息");
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+    
+    // 创建表单
+    QFormLayout *formLayout = new QFormLayout();
+    QLineEdit *nameEdit = new QLineEdit(studentName, &dialog);
+    QLineEdit *idEdit = new QLineEdit(studentNumber, &dialog);
+    idEdit->setReadOnly(true); // 学号不允许修改
+    
+    formLayout->addRow("姓名:", nameEdit);
+    formLayout->addRow("学号:", idEdit);
+    layout->addLayout(formLayout);
+    
+    // 添加确定和取消按钮
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addWidget(buttonBox);
+    
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    
+    // 获取编辑后的值
+    QString newName = nameEdit->text();
+    
+    if (newName.isEmpty()) {
+        QMessageBox::warning(this, "警告", "学生姓名不能为空");
+        return;
+    }
+    
+    // 准备网络请求
+    QUrl url(TEACHER_SERVER_URL + "/teacher/students/" + studentId);
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    
+    // 构建请求数据
+    QJsonObject studentData;
+    studentData["name"] = newName;
+    QJsonDocument doc(studentData);
+    
+    // 发送请求
+    QNetworkReply *reply = networkManager->put(request, doc.toJson());
+    
+    // 处理响应
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            QMessageBox::warning(this, "网络错误", "编辑学生信息失败: " + reply->errorString());
+            reply->deleteLater();
+            return;
+        }
+        
+        // 解析响应
+        QByteArray responseData = reply->readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObject = jsonResponse.object();
+        
+        if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+            QMessageBox::information(this, "成功", "学生信息编辑成功");
+            
+            // 刷新学生列表
+            if (!currentClassId.isEmpty()) {
+                loadStudentsInClass(currentClassId);
+            }
+        } else {
+            QString errorMessage = "编辑学生信息失败";
+            if (jsonObject.contains("message")) {
+                errorMessage = jsonObject["message"].toString();
+            }
+            QMessageBox::warning(this, "错误", errorMessage);
+        }
+        
+        reply->deleteLater();
+    });
+}
+
+void TeacherWidget::onDeleteStudentButtonClicked()
+{
+    // 获取当前选中的学生
+    QModelIndex index = ui->studentsTableView->currentIndex();
+    if (!index.isValid()) {
+        QMessageBox::warning(this, "警告", "请先选择一个学生");
+        return;
+    }
+    
+    int row = index.row();
+    QString studentId = studentsModel->item(row, 0)->data(Qt::UserRole).toString();
+    QString studentName = studentsModel->item(row, 0)->text();
+    
+    // 确认删除
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "确认", 
+        QString("确定要删除学生 %1 吗?").arg(studentName),
+        QMessageBox::Yes | QMessageBox::No);
+    
+    if (reply == QMessageBox::Yes) {
+        // 准备删除学生请求
+        QUrl url(TEACHER_SERVER_URL + "/teacher/students/" + studentId);
+        QNetworkRequest request(url);
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+        
+        // 发送请求
+        QNetworkReply *deleteReply = networkManager->deleteResource(request);
+        
+        // 处理响应
+        connect(deleteReply, &QNetworkReply::finished, this, [this, deleteReply, studentName]() {
+            if (deleteReply->error() != QNetworkReply::NoError) {
+                QMessageBox::warning(this, "网络错误", "删除学生失败: " + deleteReply->errorString());
+                deleteReply->deleteLater();
+                return;
+            }
+            
+            // 解析响应
+            QByteArray responseData = deleteReply->readAll();
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+            QJsonObject jsonObject = jsonResponse.object();
+            
+            if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
+                QMessageBox::information(this, "成功", QString("学生 %1 已删除").arg(studentName));
+                
+                // 刷新学生列表
+                if (!currentClassId.isEmpty()) {
+                    loadStudentsInClass(currentClassId);
+                }
+            } else {
+                QString errorMessage = "删除学生失败";
+                if (jsonObject.contains("message")) {
+                    errorMessage = jsonObject["message"].toString();
+                }
+                QMessageBox::warning(this, "错误", errorMessage);
+            }
+            
+            deleteReply->deleteLater();
+        });
+    }
+}
+
+void TeacherWidget::onExportButtonClicked()
+{
+    // 导出当前表格数据（根据当前标签页选择不同的导出数据）
+    int currentTab = ui->tabWidget->currentIndex();
+    
+    QStandardItemModel *modelToExport = nullptr;
+    QString defaultFileName = "";
+    QString sheetName = "";
+    
+    // 根据当前标签页选择要导出的数据
+    if (currentTab == 0) { // 班级管理
+        modelToExport = studentsModel;
+        defaultFileName = "学生列表.xlsx";
+        sheetName = "学生列表";
+        
+        if (modelToExport->rowCount() == 0) {
+            QMessageBox::warning(this, "警告", "没有学生数据可导出");
+            return;
+        }
+    } else if (currentTab == 1) { // 考勤管理
+        modelToExport = attendanceModel;
+        defaultFileName = "考勤记录.xlsx";
+        sheetName = "考勤记录";
+        
+        if (modelToExport->rowCount() == 0) {
+            QMessageBox::warning(this, "警告", "没有考勤数据可导出");
+            return;
+        }
+    } else if (currentTab == 2) { // 座位管理
+        modelToExport = seatsModel;
+        defaultFileName = "座位安排.xlsx";
+        sheetName = "座位安排";
+        
+        if (modelToExport->rowCount() == 0) {
+            QMessageBox::warning(this, "警告", "没有座位数据可导出");
+            return;
+        }
+    } else {
+        QMessageBox::warning(this, "警告", "当前页面没有可导出的数据");
+        return;
+    }
+    
+    // 获取保存文件路径
+    QString fileName = QFileDialog::getSaveFileName(this, "导出数据", 
+                                                 defaultFileName,
+                                                 "Excel 文件 (*.xlsx);;CSV 文件 (*.csv)");
+    
+    if (fileName.isEmpty()) {
+        return;
+    }
+    
+    bool success = false;
+    
+    // 根据文件类型选择导出方式
+    if (fileName.endsWith(".xlsx", Qt::CaseInsensitive)) {
+        success = exportToExcel(fileName, modelToExport, sheetName);
+    } else if (fileName.endsWith(".csv", Qt::CaseInsensitive)) {
+        success = exportToCSV(fileName, modelToExport);
+    } else {
+        if (!fileName.contains(".")) {
+            fileName += ".xlsx";
+            success = exportToExcel(fileName, modelToExport, sheetName);
+        } else {
+            QMessageBox::warning(this, "警告", "不支持的文件格式");
+            return;
+        }
+    }
+    
+    if (success) {
+        QMessageBox::information(this, "成功", "数据导出成功");
+    } else {
+        QMessageBox::critical(this, "错误", "数据导出失败");
+    }
+}
+
+void TeacherWidget::onSearchButtonClicked()
+{
+    // 使用输入对话框替代不存在的搜索框控件
+    bool ok;
+    QString searchText = QInputDialog::getText(this, "搜索", "请输入搜索内容:", QLineEdit::Normal, "", &ok);
+    
+    if (!ok || searchText.isEmpty()) {
+        return;
+    }
+    
+    // 根据当前标签页选择搜索范围
+    int currentTab = ui->tabWidget->currentIndex();
+    QStandardItemModel *modelToSearch = nullptr;
+    
+    if (currentTab == 0) { // 班级管理
+        modelToSearch = studentsModel;
+    } else if (currentTab == 1) { // 考勤管理
+        modelToSearch = attendanceModel;
+    } else if (currentTab == 2) { // 座位管理
+        modelToSearch = seatsModel;
+    } else {
+        QMessageBox::warning(this, "警告", "当前页面不支持搜索");
+        return;
+    }
+    
+    // 执行搜索
+    bool found = false;
+    for (int row = 0; row < modelToSearch->rowCount(); ++row) {
+        for (int col = 0; col < modelToSearch->columnCount(); ++col) {
+            QModelIndex index = modelToSearch->index(row, col);
+            QString cellData = modelToSearch->data(index).toString();
+            
+            if (cellData.contains(searchText, Qt::CaseInsensitive)) {
+                // 找到匹配项，选中该行
+                if (currentTab == 0) {
+                    ui->studentsTableView->selectRow(row);
+                    ui->studentsTableView->scrollTo(index);
+                } else if (currentTab == 1) {
+                    ui->attendanceTableView->selectRow(row);
+                    ui->attendanceTableView->scrollTo(index);
+                } else if (currentTab == 2) {
+                    ui->seatsTableView->selectRow(row);
+                    ui->seatsTableView->scrollTo(index);
+                }
+                
+                found = true;
+                break;
+            }
+        }
+        
+        if (found) break;
+    }
+    
+    if (!found) {
+        QMessageBox::information(this, "搜索结果", "未找到匹配项");
+    }
+}
+
+void TeacherWidget::onSearchTextChanged(const QString& text)
+{
+    // 由于移除了搜索框控件，这个方法可能不再需要
+    // 为了保持代码完整性，保留此方法但简化逻辑
+    if (text.isEmpty()) {
+        // 根据当前标签页操作
+        int currentTab = ui->tabWidget->currentIndex();
+        
+        if (currentTab == 0 && !currentClassId.isEmpty()) { // 班级管理
+            loadStudentsInClass(currentClassId);
+        } else if (currentTab == 1 && !currentExamRoomId.isEmpty()) { // 考勤管理
+            loadExamAttendance(currentExamRoomId);
+        } else if (currentTab == 2 && !currentExamRoomId.isEmpty()) { // 座位管理
+            loadExamSeats(currentExamRoomId);
+        }
+    }
+}
+
+void TeacherWidget::setUserInfo(const QString& username, const QString& token, const QString& userId)
+{
+    this->username = username;
+    this->token = token;
+    this->userId = userId;
+    
+    // 更新UI显示
+    ui->nameLabel->setText("姓名: " + username);
+}
+
+void TeacherWidget::showMessage(const QString& message, bool isError)
+{
+    if (isError) {
+        QMessageBox::warning(this, "错误", message);
+    } else {
+        QMessageBox::information(this, "提示", message);
+    }
+}
+
+QJsonObject TeacherWidget::parseResponse(QNetworkReply* reply, bool showError)
+{
+    QJsonObject result;
+    
+    if (reply->error() != QNetworkReply::NoError) {
+        if (showError) {
+            QMessageBox::warning(this, "网络错误", "请求失败: " + reply->errorString());
+        }
+        return result;
+    }
+    
+    QByteArray responseData = reply->readAll();
+    QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+    
+    if (jsonResponse.isObject()) {
+        result = jsonResponse.object();
+        
+        // 检查错误消息
+        if (result.contains("error") && showError) {
+            QMessageBox::warning(this, "错误", result["error"].toString());
+            return QJsonObject(); // 返回空对象表示错误
+        }
+    } else if (showError) {
+        QMessageBox::warning(this, "错误", "无效的响应格式");
+    }
+    
+    return result;
 } 

@@ -361,59 +361,317 @@ bool NetworkManager::uploadAttendanceRecord(int studentId, int examRoomId, const
     return success;
 }
 
-// 发送更新通知，通知服务器数据已更新，需要推送给其他客户端
-void NetworkManager::sendUpdateNotification(int examRoomId)
-{
-    if (authToken.isEmpty()) {
-        qDebug() << "错误: 尝试发送更新通知时没有认证令牌";
-        return;
-    }
+// 发送更新通知
+void NetworkManager::sendUpdateNotification(int examRoomId) {
+    QNetworkRequest request(QUrl(serverUrl + "/api/notify-update"));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
     QJsonObject requestData;
     requestData["examRoomId"] = examRoomId;
-    requestData["type"] = "attendance_update";
+    requestData["message"] = "考勤记录已更新";
     
-    // 只在用户ID不为空时添加
-    if (!loggedInUserId.isEmpty()) {
-        requestData["senderId"] = loggedInUserId;
+    QNetworkReply *reply = manager->post(request, QJsonDocument(requestData).toJson());
+    
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("发送更新通知失败: " + reply->errorString());
+            return;
+        }
+    });
+}
+
+void NetworkManager::getNotifications(NetworkCallback callback)
+{
+    if (authToken.isEmpty() || loggedInUserId.isEmpty()) {
+        emit networkError("用户未登录，无法获取通知");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "用户未登录，无法获取通知";
+        callback(errorResponse);
+        return;
     }
     
-    // 创建网络请求
-    QUrl url(serverUrl + "/notification/push");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkRequest request(QUrl(serverUrl + "/api/notifications/" + loggedInUserId));
     request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
     
-    // 转换数据为JSON格式
-    QJsonDocument requestDoc(requestData);
-    QByteArray requestDataBytes = requestDoc.toJson();
+    QNetworkReply *reply = manager->get(request);
     
-    // 创建事件循环以同步处理网络请求
-    QEventLoop eventLoop;
-    
-    // 发送POST请求
-    QNetworkReply *reply = manager->post(request, requestDataBytes);
-    
-    // 连接信号到事件循环
-    connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
-    
-    // 等待请求完成
-    eventLoop.exec();
-    
-    // 处理响应
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray responseData = reply->readAll();
-        QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
-        QJsonObject responseObj = responseDoc.object();
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
         
-        if (responseObj["status"].toString() == "success") {
-            qDebug() << "更新通知发送成功";
-        } else {
-            qDebug() << "更新通知发送错误: " << responseObj["message"].toString();
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("获取通知失败: " + reply->errorString());
+            QJsonObject errorResponse;
+            errorResponse["success"] = false;
+            errorResponse["message"] = "获取通知失败: " + reply->errorString();
+            callback(errorResponse);
+            return;
         }
-    } else {
-        qDebug() << "更新通知发送失败: " << reply->errorString();
+        
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObj = doc.object();
+        
+        callback(jsonObj);
+    });
+}
+
+void NetworkManager::markNotificationAsRead(int notificationId, NetworkCallback callback)
+{
+    if (authToken.isEmpty()) {
+        emit networkError("用户未登录，无法标记通知为已读");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "用户未登录，无法标记通知为已读";
+        callback(errorResponse);
+        return;
     }
     
-    reply->deleteLater();
+    QNetworkRequest request(QUrl(serverUrl + "/api/notifications/mark-read/" + QString::number(notificationId)));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    QJsonObject requestData;
+    requestData["id"] = notificationId;
+    
+    QNetworkReply *reply = manager->put(request, QJsonDocument(requestData).toJson());
+    
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("标记通知为已读失败: " + reply->errorString());
+            QJsonObject errorResponse;
+            errorResponse["success"] = false;
+            errorResponse["message"] = "标记通知为已读失败: " + reply->errorString();
+            callback(errorResponse);
+            return;
+        }
+        
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObj = doc.object();
+        
+        callback(jsonObj);
+    });
+}
+
+void NetworkManager::uploadStudentPhoto(const QByteArray& photoData, NetworkCallback callback)
+{
+    if (authToken.isEmpty() || loggedInUserId.isEmpty()) {
+        emit networkError("用户未登录，无法上传照片");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "用户未登录，无法上传照片";
+        callback(errorResponse);
+        return;
+    }
+    
+    if (photoData.isEmpty()) {
+        emit networkError("照片数据为空，无法上传");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "照片数据为空，无法上传";
+        callback(errorResponse);
+        return;
+    }
+    
+    QNetworkRequest request(QUrl(serverUrl + "/api/students/upload-photo"));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+    
+    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    
+    QHttpPart userIdPart;
+    userIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"userId\""));
+    userIdPart.setBody(loggedInUserId.toUtf8());
+    multiPart->append(userIdPart);
+    
+    QHttpPart photoPart;
+    photoPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"photo\"; filename=\"photo.png\""));
+    photoPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/png"));
+    photoPart.setBody(photoData);
+    multiPart->append(photoPart);
+    
+    QNetworkReply *reply = manager->post(request, multiPart);
+    multiPart->setParent(reply);
+    
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("上传照片失败: " + reply->errorString());
+            QJsonObject errorResponse;
+            errorResponse["success"] = false;
+            errorResponse["message"] = "上传照片失败: " + reply->errorString();
+            callback(errorResponse);
+            return;
+        }
+        
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObj = doc.object();
+        
+        callback(jsonObj);
+    });
+}
+
+void NetworkManager::uploadAttendanceRecord(int examRoomId, const QString& studentId, bool isPresent, const QString& photoUrl, NetworkCallback callback)
+{
+    if (authToken.isEmpty()) {
+        emit networkError("用户未登录，无法上传考勤记录");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "用户未登录，无法上传考勤记录";
+        callback(errorResponse);
+        return;
+    }
+    
+    QNetworkRequest request(QUrl(serverUrl + "/api/attendance/record"));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    QJsonObject requestData;
+    requestData["examRoomId"] = examRoomId;
+    requestData["studentId"] = studentId;
+    requestData["isPresent"] = isPresent;
+    
+    if (!photoUrl.isEmpty()) {
+        requestData["photoUrl"] = ensureFullPhotoUrl(photoUrl);
+    }
+    
+    requestData["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    
+    QNetworkReply *reply = manager->post(request, QJsonDocument(requestData).toJson());
+    
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("上传考勤记录失败: " + reply->errorString());
+            QJsonObject errorResponse;
+            errorResponse["success"] = false;
+            errorResponse["message"] = "上传考勤记录失败: " + reply->errorString();
+            callback(errorResponse);
+            return;
+        }
+        
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObj = doc.object();
+        
+        sendUpdateNotification(examRoomId);
+        
+        callback(jsonObj);
+    });
+}
+
+QString NetworkManager::ensureFullPhotoUrl(const QString &photoUrl) {
+    if (photoUrl.isEmpty()) {
+        return "";
+    }
+    
+    if (photoUrl.startsWith("http://") || photoUrl.startsWith("https://")) {
+        return photoUrl;
+    }
+    
+    QString normalizedUrl = photoUrl;
+    if (!normalizedUrl.startsWith("/")) {
+        normalizedUrl = "/" + normalizedUrl;
+    }
+    
+    QString fullUrl = serverUrl + normalizedUrl;
+    qDebug() << "原始照片URL:" << photoUrl << "，完整URL:" << fullUrl;
+    return fullUrl;
+}
+
+void NetworkManager::sendMessage(int examRoomId, const QString &message, NetworkCallback callback)
+{
+    if (authToken.isEmpty() || loggedInUserId.isEmpty()) {
+        emit networkError("用户未登录，无法发送消息");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "用户未登录，无法发送消息";
+        callback(errorResponse);
+        return;
+    }
+    
+    if (message.isEmpty()) {
+        emit networkError("消息内容不能为空");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "消息内容不能为空";
+        callback(errorResponse);
+        return;
+    }
+    
+    QNetworkRequest request(QUrl(serverUrl + "/api/chat/messages"));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    QJsonObject requestData;
+    requestData["examRoomId"] = examRoomId;
+    requestData["userId"] = loggedInUserId;
+    requestData["username"] = loggedInUsername;
+    requestData["message"] = message;
+    requestData["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    
+    QNetworkReply *reply = manager->post(request, QJsonDocument(requestData).toJson());
+    
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("发送消息失败: " + reply->errorString());
+            QJsonObject errorResponse;
+            errorResponse["success"] = false;
+            errorResponse["message"] = "发送消息失败: " + reply->errorString();
+            callback(errorResponse);
+            return;
+        }
+        
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObj = doc.object();
+        
+        callback(jsonObj);
+    });
+}
+
+void NetworkManager::getChatMessages(int examRoomId, NetworkCallback callback)
+{
+    if (authToken.isEmpty()) {
+        emit networkError("用户未登录，无法获取聊天记录");
+        QJsonObject errorResponse;
+        errorResponse["success"] = false;
+        errorResponse["message"] = "用户未登录，无法获取聊天记录";
+        callback(errorResponse);
+        return;
+    }
+    
+    QNetworkRequest request(QUrl(serverUrl + "/api/chat/messages/" + QString::number(examRoomId)));
+    request.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+    
+    QNetworkReply *reply = manager->get(request);
+    
+    connect(reply, &QNetworkReply::finished, [=]() {
+        reply->deleteLater();
+        
+        if (reply->error() != QNetworkReply::NoError) {
+            emit networkError("获取聊天记录失败: " + reply->errorString());
+            QJsonObject errorResponse;
+            errorResponse["success"] = false;
+            errorResponse["message"] = "获取聊天记录失败: " + reply->errorString();
+            callback(errorResponse);
+            return;
+        }
+        
+        QByteArray responseData = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObj = doc.object();
+        
+        callback(jsonObj);
+    });
 } 

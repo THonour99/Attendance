@@ -15,9 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QHBoxLayout, QHeaderView, QLabel,
-    QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
-    QTableView, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QHeaderView,
+    QLabel, QPushButton, QScrollArea, QSizePolicy,
+    QSpacerItem, QTabWidget, QTableView, QVBoxLayout,
+    QWidget)
 
 class Ui_StudentWidget(object):
     def setupUi(self, StudentWidget):
@@ -65,8 +66,39 @@ class Ui_StudentWidget(object):
 
         self.infoLayout.addWidget(self.refreshButton)
 
+        self.notificationButton = QPushButton(StudentWidget)
+        self.notificationButton.setObjectName(u"notificationButton")
+
+        self.infoLayout.addWidget(self.notificationButton)
+
+        self.logoutButton = QPushButton(StudentWidget)
+        self.logoutButton.setObjectName(u"logoutButton")
+
+        self.infoLayout.addWidget(self.logoutButton)
+
 
         self.verticalLayout.addLayout(self.infoLayout)
+
+        self.notificationsFrame = QFrame(StudentWidget)
+        self.notificationsFrame.setObjectName(u"notificationsFrame")
+        self.notificationsFrame.setFrameShape(QFrame.StyledPanel)
+        self.notificationsFrame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_7 = QVBoxLayout(self.notificationsFrame)
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.notificationsScrollArea = QScrollArea(self.notificationsFrame)
+        self.notificationsScrollArea.setObjectName(u"notificationsScrollArea")
+        self.notificationsScrollArea.setWidgetResizable(True)
+        self.notificationsScrollAreaContents = QWidget()
+        self.notificationsScrollAreaContents.setObjectName(u"notificationsScrollAreaContents")
+        self.notificationsScrollAreaContents.setGeometry(QRect(0, 0, 760, 69))
+        self.notificationsLayout = QVBoxLayout(self.notificationsScrollAreaContents)
+        self.notificationsLayout.setObjectName(u"notificationsLayout")
+        self.notificationsScrollArea.setWidget(self.notificationsScrollAreaContents)
+
+        self.verticalLayout_7.addWidget(self.notificationsScrollArea)
+
+
+        self.verticalLayout.addWidget(self.notificationsFrame)
 
         self.tabWidget = QTabWidget(StudentWidget)
         self.tabWidget.setObjectName(u"tabWidget")
@@ -99,6 +131,11 @@ class Ui_StudentWidget(object):
 
         self.verticalLayout_4.addWidget(self.photoStatusLabel)
 
+        self.photoPathLabel = QLabel(self.photoTab)
+        self.photoPathLabel.setObjectName(u"photoPathLabel")
+
+        self.verticalLayout_4.addWidget(self.photoPathLabel)
+
         self.uploadPhotoButton = QPushButton(self.photoTab)
         self.uploadPhotoButton.setObjectName(u"uploadPhotoButton")
 
@@ -109,6 +146,13 @@ class Ui_StudentWidget(object):
         self.photoPreviewLabel.setAlignment(Qt.AlignCenter)
 
         self.verticalLayout_4.addWidget(self.photoPreviewLabel)
+
+        self.photoLabel = QLabel(self.photoTab)
+        self.photoLabel.setObjectName(u"photoLabel")
+        self.photoLabel.setMinimumSize(QSize(150, 150))
+        self.photoLabel.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_4.addWidget(self.photoLabel)
 
         self.tabWidget.addTab(self.photoTab, "")
         self.seatTab = QWidget()
@@ -142,7 +186,7 @@ class Ui_StudentWidget(object):
 
         self.retranslateUi(StudentWidget)
 
-        self.tabWidget.setCurrentIndex(4)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(StudentWidget)
@@ -154,11 +198,15 @@ class Ui_StudentWidget(object):
         self.nameLabel.setText(QCoreApplication.translate("StudentWidget", u"\u59d3\u540d: ", None))
         self.studentIdLabel.setText(QCoreApplication.translate("StudentWidget", u"\u5b66\u53f7: ", None))
         self.refreshButton.setText(QCoreApplication.translate("StudentWidget", u"\u5237\u65b0\u6570\u636e", None))
+        self.notificationButton.setText(QCoreApplication.translate("StudentWidget", u"\u901a\u77e5", None))
+        self.logoutButton.setText(QCoreApplication.translate("StudentWidget", u"\u9000\u51fa\u767b\u5f55", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.attendanceTab), QCoreApplication.translate("StudentWidget", u"\u8003\u52e4\u8bb0\u5f55", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.classTab), QCoreApplication.translate("StudentWidget", u"\u73ed\u7ea7\u4fe1\u606f", None))
         self.photoStatusLabel.setText(QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u72b6\u6001: \u672a\u4e0a\u4f20", None))
+        self.photoPathLabel.setText(QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u8def\u5f84:", None))
         self.uploadPhotoButton.setText(QCoreApplication.translate("StudentWidget", u"\u4e0a\u4f20\u7167\u7247", None))
         self.photoPreviewLabel.setText(QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u9884\u89c8", None))
+        self.photoLabel.setText(QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u663e\u793a", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.photoTab), QCoreApplication.translate("StudentWidget", u"\u7167\u7247\u7ba1\u7406", None))
         self.examRoomInfoLabel.setText(QCoreApplication.translate("StudentWidget", u"\u8003\u573a\u4fe1\u606f", None))
         self.seatInfoLabel.setText(QCoreApplication.translate("StudentWidget", u"\u5ea7\u4f4d\u4fe1\u606f", None))

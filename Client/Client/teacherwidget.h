@@ -12,6 +12,7 @@
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QFormLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
@@ -22,6 +23,11 @@
 #include <QScrollArea>
 #include <QTimer>
 #include <QGridLayout>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QJsonDocument>
+#include <QLineEdit>
+#include <QSet>
 
 namespace Ui {
 class TeacherWidget;
@@ -34,6 +40,8 @@ class TeacherWidget : public QWidget
 public:
     explicit TeacherWidget(const QJsonObject &userInfo, const QString &token, QWidget *parent = nullptr);
     ~TeacherWidget();
+
+    void setUserInfo(const QString& username, const QString& token, const QString& userId);
 
 private slots:
     // 班级管理
@@ -65,9 +73,27 @@ private slots:
     void onStudentPhotoReceived(QNetworkReply *reply);
     void onRequestStudentPhotosClicked();
     void onViewStudentPhotosClicked();
+    void onViewStudentPhotosFinished(QNetworkReply *reply);
     
     // 刷新数据
     void onRefreshButtonClicked();
+
+    void onLogoutButtonClicked();
+    void onRefreshClassesButtonClicked();
+    void onAddClassButtonClicked();
+    void onEditClassButtonClicked();
+    void onDeleteClassButtonClicked();
+    void onStudentDataReceived(QNetworkReply* reply);
+    void onAddStudentButtonClicked();
+    void onEditStudentButtonClicked();
+    void onDeleteStudentButtonClicked();
+    void onExportButtonClicked();
+    void onSearchButtonClicked();
+    void onSearchTextChanged(const QString& text);
+    
+    // 照片刷新相关
+    void setupClassPhotoRefresh();
+    void refreshClassPhotosStatus();
 
 private:
     Ui::TeacherWidget *ui;
@@ -85,6 +111,10 @@ private:
     QString currentClassId;
     QString currentExamRoomId;
     QString currentStudentId;
+    QString username;
+    QString userId;
+    QTimer *photoRefreshTimer;
+    QSet<QNetworkReply*> repliesBeingProcessed;
 
     void setupUI();
     void loadClassesData();
@@ -97,6 +127,17 @@ private:
     // 导出辅助函数
     bool exportToExcel(const QString &fileName, QStandardItemModel *model, const QString &sheetName);
     bool exportToCSV(const QString &fileName, QStandardItemModel *model);
+
+    void initUI();
+    void loadClasses();
+    void loadStudentsForClass(const QString& classId);
+    void clearStudentTable();
+    void showMessage(const QString& message, bool isError = false);
+    QJsonObject parseResponse(QNetworkReply* reply, bool showError = true);
+
+    QStandardItemModel* generateAttendanceModel(QJsonArray attendanceData);
+    void showSelectedStudentList(QStandardItemModel* model);
+    QString ensureFullPhotoUrl(const QString &photoUrl);
 };
 
 #endif // TEACHERWIDGET_H 
