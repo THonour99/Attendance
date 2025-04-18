@@ -7,6 +7,10 @@
 #include <QAction>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QIcon>
+#include <QApplication>
+#include <QWindow>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -34,6 +38,14 @@ void MainWindow::setupUI()
     // 设置窗口标题和大小
     setWindowTitle("人脸识别考勤系统 - 客户端");
     resize(1000, 700);
+    
+    // 确保窗口在任务栏中显示
+    setWindowFlags(windowFlags() | Qt::Window);
+    setAttribute(Qt::WA_NativeWindow, true);  // 确保获得原生窗口句柄
+    
+    // 设置窗口图标 - 使用资源中的图标
+    QIcon icon(":/icon/app_icon.ico");
+    setWindowIcon(icon);
     
     // 设置中央部件为堆叠部件
     setCentralWidget(stackedWidget);
@@ -149,4 +161,4 @@ void MainWindow::showInterface()
         QMessageBox::critical(this, "错误", "未知的用户角色: " + userRole);
         logout();
     }
-}
+} 

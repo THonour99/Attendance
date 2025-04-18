@@ -33,12 +33,12 @@ void LoginDialog::setupUI()
     
     usernameEdit = new QLineEdit(this);
     usernameEdit->setPlaceholderText("请输入用户名");
-    usernameEdit->setText("operator"); // 默认用户名
+    usernameEdit->setText("teacher1"); // 默认用户名
     
     passwordEdit = new QLineEdit(this);
     passwordEdit->setPlaceholderText("请输入密码");
     passwordEdit->setEchoMode(QLineEdit::Password);
-    passwordEdit->setText("operator123"); // 默认密码
+    passwordEdit->setText("teacher123"); // 默认密码
     
     serverUrlEdit = new QLineEdit(this);
     serverUrlEdit->setPlaceholderText("服务器地址");

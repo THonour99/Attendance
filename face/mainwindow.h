@@ -52,10 +52,14 @@ private slots:
     void on_loadStudentsButton_clicked();
     void on_examRoomSelector_currentIndexChanged(int index);
     void onNetworkError(const QString &errorMessage);
+    
+    // 新增槽函数：更新考勤状态
+    void updateAttendanceStatus();
 
 private:
     Ui::MainWindow *ui;
     QTimer *timer;
+    QTimer *statusUpdateTimer;  // 新增：状态更新定时器
     cv::VideoCapture capture;
     cv::CascadeClassifier faceCascade;
     cv::Mat frame;
@@ -73,6 +77,7 @@ private:
     QPushButton *loadExamRoomsButton;
     QPushButton *loadStudentsButton;
     QLabel *examInfoLabel;
+    QLabel *attendanceStatsLabel;  // 新增：考勤统计标签
     
     QVector<ExamRoom> examRooms;
     QVector<StudentInfo> currentStudents;
@@ -94,6 +99,8 @@ private:
     void loadStudentList(int examRoomId);
     void updateStudentAttendance(int studentRow, const QString &status);
     void processStudentRecognition(const QString &recognizedName);
+    void updateAttendanceStats();  // 新增：更新考勤统计
+    void showSuccessOverlay(const QString &name, int seatNumber, const QString &status);  // 新增：显示签到成功覆盖图
     
     // 重写关闭事件
     void closeEvent(QCloseEvent *event) override;

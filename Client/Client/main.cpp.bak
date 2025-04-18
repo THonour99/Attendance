@@ -1,0 +1,47 @@
+#include "mainwindow.h"
+
+#include <QApplication>
+#include <QIcon>
+#include <Windows.h>
+#include <QDebug>
+#include <shobjidl.h>
+#include <propkey.h>
+
+// 声明Windows API函数
+#ifdef __cplusplus
+extern "C" {
+#endif
+DECLSPEC_IMPORT HRESULT STDAPICALLTYPE SetCurrentProcessExplicitAppUserModelID(PCWSTR AppID);
+#ifdef __cplusplus
+}
+#endif
+
+int main(int argc, char *argv[])
+{
+    // 确保应用程序与Windows任务栏正确集成
+    // 使用WinAPI的SetCurrentProcessExplicitAppUserModelID
+    wchar_t appId[256] = L"AttendanceSystem.Client.1.0";
+    HRESULT hr = SetCurrentProcessExplicitAppUserModelID(appId);
+    if (FAILED(hr)) {
+        qDebug("设置AppUserModelID失败, 错误码: %ld", hr);
+    }
+    
+    QApplication a(argc, argv);
+    
+    // 设置应用程序图标
+    QIcon appIcon(":/icon/app_icon.ico");
+    a.setWindowIcon(appIcon);
+    
+    // 设置应用程序名称和组织
+    a.setApplicationName("人脸识别考勤系统");
+    a.setOrganizationName("考勤系统开发团队");
+    a.setApplicationVersion("1.0.0");
+    
+    MainWindow w;
+    
+    // 确保窗口在任务栏中显示
+    w.setAttribute(Qt::WA_NativeWindow);
+    w.show();
+    
+    return a.exec();
+}

@@ -122,9 +122,42 @@ void TeacherWidget::setupUI()
     ui->attendanceTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     
     // 设置座位表格模型
-    seatsModel->setHorizontalHeaderLabels(QStringList() << "座位号" << "姓名" << "学号" << "班级");
+    seatsModel->setHorizontalHeaderLabels(QStringList() << "座位号" << "学号" << "学生姓名" << "班级" << "出勤状态");
     ui->seatsTableView->setModel(seatsModel);
     ui->seatsTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    
+    // 应用表格样式和对齐方式
+    QString tableStyle = 
+        "QTableView {"
+        "  gridline-color: #d0d0d0;"  // 网格线颜色
+        "  background-color: white;"  // 背景色
+        "  alternate-background-color: #f7f7f7;"  // 交替行颜色
+        "}"
+        "QHeaderView::section {"
+        "  background-color: #f0f0f0;"  // 表头背景色
+        "  color: black;"  // 表头文字颜色
+        "  padding: 5px;"  // 表头内边距
+        "  border: 1px solid #c0c0c0;"  // 表头边框
+        "  font-weight: bold;"  // 表头字体加粗
+        "}";
+    
+    // 应用样式到所有表格
+    ui->studentsTableView->setStyleSheet(tableStyle);
+    ui->attendanceTableView->setStyleSheet(tableStyle);
+    ui->seatsTableView->setStyleSheet(tableStyle);
+    
+    // 禁用行头（第一列的序号列）
+    ui->seatsTableView->verticalHeader()->setVisible(false);
+    
+    // 启用交替行颜色
+    ui->studentsTableView->setAlternatingRowColors(true);
+    ui->attendanceTableView->setAlternatingRowColors(true);
+    ui->seatsTableView->setAlternatingRowColors(true);
+    
+    // 设置选择模式
+    ui->studentsTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->attendanceTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->seatsTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     
     // 确保连接信号槽
     connect(ui->classesListView, &QListView::clicked, this, &TeacherWidget::onClassSelected);
@@ -270,50 +303,53 @@ void TeacherWidget::onStudentsDataReceived(QNetworkReply *reply)
     QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
     QJsonObject jsonObject = jsonResponse.object();
     
-    // 调试信息 - 输出获取到的学生数据
-    qDebug() << "学生数据原始响应: " << QString(responseData.left(500)); // 只显示前500个字符避免日志过长
+    // 清空现有学生数据
+    studentsModel->removeRows(0, studentsModel->rowCount());
     
     // 检查响应状态
     if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
         if (jsonObject.contains("data") && jsonObject["data"].isArray()) {
-            QJsonArray studentsData = jsonObject["data"].toArray();
+            QJsonArray students = jsonObject["data"].toArray();
             
-            qDebug() << "获取到" << studentsData.size() << "个学生记录";
-            
-            // 更新学生表格
-            studentsModel->removeRows(0, studentsModel->rowCount());
-            
-            for (int i = 0; i < studentsData.size(); ++i) {
-                QJsonObject studentInfo = studentsData[i].toObject();
+            for (int i = 0; i < students.size(); ++i) {
+                QJsonObject student = students[i].toObject();
                 
-                QList<QStandardItem*> rowItems;
-                QString name = studentInfo["name"].toString();
-                QString studentIdStr = studentInfo["studentId"].toString();
-                QString className = studentInfo["className"].toString();
+                QList<QStandardItem*> row;
                 
-                rowItems << new QStandardItem(name);
-                rowItems << new QStandardItem(studentIdStr);
-                rowItems << new QStandardItem(className);
+                // 创建并设置每个单元格
+                QStandardItem *nameItem = new QStandardItem(student["name"].toString());
+                nameItem->setTextAlignment(Qt::AlignCenter);
+                nameItem->setData(student["id"].toString(), Qt::UserRole);
                 
-                // 获取学生ID（优先使用id字段，如果没有则使用studentId字段）
-                QString studentId;
-                if (studentInfo.contains("id")) {
-                    studentId = studentInfo["id"].toString();
-                } else {
-                    studentId = studentIdStr; // 回退到学号
-                }
+                QStandardItem *idItem = new QStandardItem(student["studentId"].toString());
+                idItem->setTextAlignment(Qt::AlignCenter);
                 
-                // 存储学生ID用于后续操作
-                rowItems[0]->setData(studentId, Qt::UserRole);
+                QStandardItem *classItem = new QStandardItem(student["className"].toString());
+                classItem->setTextAlignment(Qt::AlignCenter);
                 
-                // 调试输出学生ID信息
-                qDebug() << "学生 #" << i << " - 姓名:" << name << ", ID:" << studentId;
-                
-                studentsModel->appendRow(rowItems);
+                // 添加行数据
+                row << nameItem << idItem << classItem;
+                studentsModel->appendRow(row);
             }
+            
+            // 设置表头对齐方式
+            for (int i = 0; i < studentsModel->columnCount(); ++i) {
+                studentsModel->setHeaderData(i, Qt::Horizontal, 
+                                          studentsModel->headerData(i, Qt::Horizontal), 
+                                          Qt::DisplayRole);
+                studentsModel->setHeaderData(i, Qt::Horizontal, 
+                                          Qt::AlignCenter, 
+                                          Qt::TextAlignmentRole);
+            }
+            
+            // 更新表格显示
+            ui->studentsTableView->resizeColumnsToContents();
+            ui->studentsTableView->update();
+        } else {
+            QMessageBox::information(this, "提示", "该班级没有学生");
         }
     } else {
-        QString errorMessage = "获取学生数据失败";
+        QString errorMessage = "获取学生列表失败";
         if (jsonObject.contains("message")) {
             errorMessage = jsonObject["message"].toString();
         }
@@ -374,8 +410,6 @@ void TeacherWidget::onExamAttendanceDataReceived(QNetworkReply *reply)
 {
     // 检查网络错误
     if (reply->error() != QNetworkReply::NoError) {
-        qDebug() << "获取考勤数据失败: " << reply->errorString();
-        qDebug() << "请求URL: " << reply->request().url().toString();
         QMessageBox::warning(this, "网络错误", "获取考勤数据失败: " + reply->errorString());
         reply->deleteLater();
         return;
@@ -386,57 +420,73 @@ void TeacherWidget::onExamAttendanceDataReceived(QNetworkReply *reply)
     QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
     QJsonObject jsonObject = jsonResponse.object();
     
-    qDebug() << "考勤数据响应: " << QString(responseData);
+    // 清空现有考勤数据
+    attendanceModel->removeRows(0, attendanceModel->rowCount());
     
     // 检查响应状态
     if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
         if (jsonObject.contains("data") && jsonObject["data"].isArray()) {
-            QJsonArray attendanceData = jsonObject["data"].toArray();
+            QJsonArray attendances = jsonObject["data"].toArray();
             
-            qDebug() << "获取到" << attendanceData.size() << "条考勤记录";
-            
-            // 更新考勤表格
-            attendanceModel->removeRows(0, attendanceModel->rowCount());
-            
-            for (int i = 0; i < attendanceData.size(); ++i) {
-                QJsonObject record = attendanceData[i].toObject();
+            for (int i = 0; i < attendances.size(); ++i) {
+                QJsonObject attendanceRecord = attendances[i].toObject();
                 
-                QList<QStandardItem*> rowItems;
-                rowItems << new QStandardItem(record["studentName"].toString());
-                rowItems << new QStandardItem(record["studentId"].toString());
+                // 创建并配置单元格
+                QStandardItem *nameItem = new QStandardItem(attendanceRecord["studentName"].toString());
+                nameItem->setTextAlignment(Qt::AlignCenter);
                 
-                // 设置状态
-                QString status = record["status"].toString();
-                QStandardItem *statusItem = new QStandardItem(status);
-                if (status == "已到") {
-                    statusItem->setForeground(QBrush(Qt::green));
-                } else if (status == "未到") {
-                    statusItem->setForeground(QBrush(Qt::red));
+                QStandardItem *idItem = new QStandardItem(attendanceRecord["studentId"].toString());
+                idItem->setTextAlignment(Qt::AlignCenter);
+                
+                QStandardItem *statusItem = new QStandardItem(attendanceRecord["status"].toString());
+                statusItem->setTextAlignment(Qt::AlignCenter);
+                
+                // 处理时间
+                QString timestamp = attendanceRecord["timestamp"].toString();
+                QDateTime dateTime = QDateTime::fromString(timestamp, Qt::ISODate);
+                QString formattedTime = dateTime.isValid() ? 
+                    dateTime.toString("yyyy-MM-dd HH:mm:ss") : timestamp;
+                
+                QStandardItem *timeItem = new QStandardItem(formattedTime);
+                timeItem->setTextAlignment(Qt::AlignCenter);
+                
+                // 根据考勤状态设置颜色
+                QString status = attendanceRecord["status"].toString();
+                if (status == "出勤") {
+                    statusItem->setForeground(QBrush(QColor("#008000"))); // 绿色
+                } else if (status == "缺勤") {
+                    statusItem->setForeground(QBrush(QColor("#ff0000"))); // 红色
                 } else if (status == "迟到") {
-                    statusItem->setForeground(QBrush(Qt::yellow));
-                }
-                rowItems << statusItem;
-                
-                // 签到时间
-                if (record.contains("checkInTime") && !record["checkInTime"].isNull()) {
-                    QString checkInTime = record["checkInTime"].toString();
-                    QDateTime time = QDateTime::fromString(checkInTime, Qt::ISODate);
-                    rowItems << new QStandardItem(time.isValid() ? time.toString("HH:mm:ss") : checkInTime);
-                } else {
-                    rowItems << new QStandardItem("-");
+                    statusItem->setForeground(QBrush(QColor("#ffa500"))); // 橙色
                 }
                 
-                attendanceModel->appendRow(rowItems);
+                // 添加行
+                QList<QStandardItem*> row;
+                row << nameItem << idItem << statusItem << timeItem;
+                attendanceModel->appendRow(row);
             }
+            
+            // 设置表头对齐方式
+            for (int i = 0; i < attendanceModel->columnCount(); ++i) {
+                attendanceModel->setHeaderData(i, Qt::Horizontal, 
+                                            attendanceModel->headerData(i, Qt::Horizontal), 
+                                            Qt::DisplayRole);
+                attendanceModel->setHeaderData(i, Qt::Horizontal, 
+                                            Qt::AlignCenter, 
+                                            Qt::TextAlignmentRole);
+            }
+            
+            // 更新表格显示
+            ui->attendanceTableView->resizeColumnsToContents();
+            ui->attendanceTableView->update();
         } else {
-            qDebug() << "考勤数据格式错误: data字段不是数组或不存在";
+            QMessageBox::information(this, "提示", "该考场没有考勤记录");
         }
     } else {
-        QString errorMessage = "获取考勤数据失败";
+        QString errorMessage = "获取考勤记录失败";
         if (jsonObject.contains("message")) {
             errorMessage = jsonObject["message"].toString();
         }
-        qDebug() << "获取考勤数据失败: " << errorMessage;
         QMessageBox::warning(this, "错误", errorMessage);
     }
     
@@ -1016,7 +1066,7 @@ void TeacherWidget::loadExamSeats(const QString &examRoomId)
         
         // 设置表头
         QStringList headers;
-        headers << "座位号" << "学生ID" << "学生姓名" << "班级" << "出勤状态";
+        headers << "座位号" << "学号" << "学生姓名" << "班级" << "出勤状态";
         seatsModel->setHorizontalHeaderLabels(headers);
         
         if (jsonObject.contains("status") && jsonObject["status"].toString() == "success") {
@@ -1039,31 +1089,103 @@ void TeacherWidget::loadExamSeats(const QString &examRoomId)
                     
                     QList<QStandardItem*> row;
                     
+                    // 服务器返回的字段说明：
+                    // seatId: 座位号
+                    // studentId: 学生ID (内部系统ID)
+                    // studentNumber: 学号 (显示用学号)
+                    // studentName: 学生姓名
+                    // className: 班级名称
+                    
                     // 获取座位字段，提供默认值以防数据缺失
-                    QString seatId = seat.contains("seatId") ? seat["seatId"].toString() : QString::number(i+1);
-                    QString studentId = seat.contains("studentNumber") ? seat["studentNumber"].toString() : 
-                                      seat.contains("studentId") ? seat["studentId"].toString() : "";
-                    QString studentName = seat.contains("studentName") ? seat["studentName"].toString() : "";
+                    // 确保座位号始终有值
+                    QString seatId;
+                    if (seat.contains("seatId") && !seat["seatId"].toString().isEmpty()) {
+                        seatId = seat["seatId"].toString();
+                    } else {
+                        seatId = QString::number(i+1);
+                    }
+                    
+                    QString studentNumber = seat.contains("studentNumber") ? seat["studentNumber"].toString() : "";
+                    QString originalStudentName = seat.contains("studentName") ? seat["studentName"].toString() : "";
                     QString className = seat.contains("className") ? seat["className"].toString() : "";
                     
+                    // 从学生姓名中分离班级信息（如果名字中包含班级信息）
+                    QString studentName = originalStudentName;
+                    if (studentName.contains("-")) {
+                        QStringList parts = studentName.split("-");
+                        if (parts.size() >= 2) {
+                            // 更新班级和学生姓名
+                            if (className.isEmpty()) {
+                                className = parts[0].trimmed();
+                            }
+                            studentName = parts[1].trimmed();
+                        }
+                    }
+                    
+                    // 创建并配置标准项目，设置文本对齐方式
+                    QStandardItem *seatIdItem = new QStandardItem(seatId);
+                    seatIdItem->setTextAlignment(Qt::AlignCenter);
+                    
+                    QStandardItem *studentNumberItem = new QStandardItem(studentNumber);
+                    studentNumberItem->setTextAlignment(Qt::AlignCenter);
+                    
+                    QStandardItem *studentNameItem = new QStandardItem(studentName);
+                    studentNameItem->setTextAlignment(Qt::AlignCenter);
+                    
+                    QStandardItem *classNameItem = new QStandardItem(className);
+                    classNameItem->setTextAlignment(Qt::AlignCenter);
+                    
                     // 添加数据到行
-                    row << new QStandardItem(seatId);
-                    row << new QStandardItem(studentId);
-                    row << new QStandardItem(studentName);
-                    row << new QStandardItem(className);
+                    row << seatIdItem << studentNumberItem << studentNameItem << classNameItem;
                     
                     // 添加出勤状态
+                    QStandardItem *statusItem = nullptr;
                     if (seat.contains("attendanceStatus")) {
-                        row << new QStandardItem(seat["attendanceStatus"].toString());
+                        statusItem = new QStandardItem(seat["attendanceStatus"].toString());
                     } else {
-                        row << new QStandardItem("未记录");
+                        statusItem = new QStandardItem("未记录");
                     }
+                    statusItem->setTextAlignment(Qt::AlignCenter);
+                    row << statusItem;
                     
                     seatsModel->appendRow(row);
                 }
                 
-                // 更新UI
+                // 配置表格视图
                 ui->seatsTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+                
+                // 设置水平表头对齐方式为居中
+                for (int i = 0; i < seatsModel->columnCount(); ++i) {
+                    seatsModel->setHeaderData(i, Qt::Horizontal, seatsModel->headerData(i, Qt::Horizontal), Qt::DisplayRole);
+                    seatsModel->setHeaderData(i, Qt::Horizontal, Qt::AlignCenter, Qt::TextAlignmentRole);
+                }
+                
+                // 应用自定义样式
+                ui->seatsTableView->setStyleSheet(
+                    "QTableView {"
+                    "  gridline-color: #d0d0d0;"  // 网格线颜色
+                    "  background-color: white;"  // 背景色
+                    "  alternate-background-color: #f7f7f7;"  // 交替行颜色
+                    "}"
+                    "QHeaderView::section {"
+                    "  background-color: #f0f0f0;"  // 表头背景色
+                    "  color: black;"  // 表头文字颜色
+                    "  padding: 5px;"  // 表头内边距
+                    "  border: 1px solid #c0c0c0;"  // 表头边框
+                    "  font-weight: bold;"  // 表头字体加粗
+                    "}"
+                );
+                
+                // 禁用行头（第一列的序号列）
+                ui->seatsTableView->verticalHeader()->setVisible(false);
+                
+                // 启用表格交替行颜色
+                ui->seatsTableView->setAlternatingRowColors(true);
+                
+                // 设置表格选择模式
+                ui->seatsTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+                ui->seatsTableView->setSelectionMode(QAbstractItemView::SingleSelection);
+                
                 ui->seatsTableView->update();
                 qDebug() << "座位表更新完成，共" << seatsModel->rowCount() << "行数据";
             } else {

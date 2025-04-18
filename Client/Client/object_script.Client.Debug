@@ -4,6 +4,7 @@ debug/main.o
 debug/mainwindow.o
 debug/studentwidget.o
 debug/teacherwidget.o
+debug/qrc_resources.o
 debug/moc_adminwidget.o
 debug/moc_logindialog.o
 debug/moc_mainwindow.o

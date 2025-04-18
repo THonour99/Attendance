@@ -4,6 +4,7 @@ release/main.o
 release/mainwindow.o
 release/studentwidget.o
 release/teacherwidget.o
+release/qrc_resources.o
 release/moc_adminwidget.o
 release/moc_logindialog.o
 release/moc_mainwindow.o
