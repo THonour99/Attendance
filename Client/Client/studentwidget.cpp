@@ -18,6 +18,7 @@
 #include <QIcon>
 #include <QPixmap>
 #include <QNetworkAccessManager>
+#include <QSizePolicy>
 
 // 服务器地址
 const QString STUDENT_SERVER_URL = "http://localhost:8080";
@@ -26,9 +27,12 @@ StudentWidget::StudentWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::StudentWidget),
     networkManager(new QNetworkAccessManager(this)),
-    notificationTimer(new QTimer(this)),
+    userToken(""),
+    userName(""),
+    studentId(""),
     hasRetryLoadSeat(false),
-    currentPhotoUrl("")
+    currentPhotoUrl(""),
+    notificationTimer(new QTimer(this))
 {
     ui->setupUi(this);
     setupUI();
@@ -112,6 +116,13 @@ void StudentWidget::setupUI()
     
     // 初始化照片状态
     updatePhotoStatus("未上传");
+    
+    // 设置照片预览标签的最小尺寸和策略
+    ui->photoPreviewLabel->setMinimumSize(320, 240);
+    ui->photoPreviewLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->photoPreviewLabel->setAlignment(Qt::AlignCenter);
+    ui->photoPreviewLabel->setStyleSheet("QLabel { background-color: #f0f0f0; border: 1px dashed #cccccc; }");
+    ui->photoPreviewLabel->setText("未上传照片");
     
     // 隐藏通知面板，直到有通知
     ui->notificationsFrame->setVisible(false);
@@ -533,13 +544,10 @@ void StudentWidget::onPhotoUploadResponse(QNetworkReply *reply)
                 }
                 qDebug() << "照片完整URL:" << currentPhotoUrl;
                 
-                // 直接显示成功图标
-                QPixmap successIcon(":/images/success.png");
-                if (!successIcon.isNull()) {
-                    displayPhoto(successIcon);
-                }
+                // 加载并显示实际上传的照片
+                loadAndDisplayPhoto(currentPhotoUrl);
                 
-                // **更新状态为成功**
+                // 更新状态为成功
                 updatePhotoStatus("照片上传成功！");
                 QMessageBox::information(this, "成功", "照片上传成功");
                 
@@ -563,6 +571,52 @@ void StudentWidget::onPhotoUploadResponse(QNetworkReply *reply)
     
     // 清理reply对象
     reply->deleteLater();
+}
+
+void StudentWidget::loadAndDisplayPhoto(const QString& photoUrl)
+{
+    if (photoUrl.isEmpty()) {
+        qWarning() << "照片URL为空，无法加载照片";
+        updatePhotoStatus("照片URL为空，无法加载");
+        return;
+    }
+    
+    qDebug() << "开始加载照片:" << photoUrl;
+    
+    // 创建网络请求获取照片
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    QUrl url(photoUrl);
+    QNetworkRequest request(url);
+    
+    // 清除缓存，确保获取最新版本
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork);
+    
+    // 发送请求
+    QNetworkReply* reply = manager->get(request);
+    
+    // 连接信号和槽
+    connect(reply, &QNetworkReply::finished, this, [=]() {
+        reply->deleteLater();
+        manager->deleteLater();
+        
+        if (reply->error() == QNetworkReply::NoError) {
+            // 读取图片数据
+            QByteArray photoData = reply->readAll();
+            QPixmap photoPixmap;
+            
+            if (photoPixmap.loadFromData(photoData)) {
+                // 显示照片
+                displayPhoto(photoPixmap);
+                qDebug() << "照片加载成功，尺寸:" << photoPixmap.size();
+            } else {
+                qWarning() << "无法从数据加载照片";
+                updatePhotoStatus("照片格式无效");
+            }
+        } else {
+            qWarning() << "加载照片出错:" << reply->errorString();
+            updatePhotoStatus("照片加载失败: " + reply->errorString());
+        }
+    });
 }
 
 void StudentWidget::onSeatInfoReceived(QNetworkReply *reply)
@@ -750,14 +804,43 @@ void StudentWidget::updatePhotoStatus(const QString& status)
 
 void StudentWidget::displayPhoto(const QPixmap& photo)
 {
-    // 调整照片大小以适应标签
-    QPixmap scaledPhoto = photo.scaled(ui->photoPreviewLabel->size(), 
-                                     Qt::KeepAspectRatio, 
-                                     Qt::SmoothTransformation);
+    if (photo.isNull()) {
+        qWarning() << "显示的照片为空";
+        ui->photoPreviewLabel->clear();
+        ui->photoPreviewLabel->setText("无照片");
+        return;
+    }
     
-    // 设置预览
+    // 清除旧的样式和设置
+    ui->photoPreviewLabel->clear();
+    ui->photoPreviewLabel->setAlignment(Qt::AlignCenter);
+    
+    // 获取标签的尺寸
+    QSize labelSize = ui->photoPreviewLabel->size();
+    qDebug() << "照片预览区域尺寸:" << labelSize;
+    
+    // 确保标签有合理的尺寸
+    if (labelSize.width() < 50 || labelSize.height() < 50) {
+        // 如果标签太小，使用一个合理的默认尺寸
+        labelSize = QSize(300, 200);
+        qDebug() << "标签尺寸太小，使用默认尺寸";
+    }
+    
+    // 根据标签尺寸计算缩放后的图片尺寸，保持宽高比
+    QPixmap scaledPhoto = photo.scaled(
+        labelSize, 
+        Qt::KeepAspectRatio, 
+        Qt::SmoothTransformation
+    );
+    
+    // 不使用setScaledContents，而是手动计算合适的大小
     ui->photoPreviewLabel->setPixmap(scaledPhoto);
-    ui->photoPreviewLabel->setScaledContents(true);
+    ui->photoPreviewLabel->setScaledContents(false);
+    
+    qDebug() << "原始照片尺寸:" << photo.size() << "缩放后尺寸:" << scaledPhoto.size();
+    
+    // 为照片添加边框样式
+    ui->photoPreviewLabel->setStyleSheet("QLabel { background-color: white; border: 1px solid #cccccc; }");
 }
 
 // 设置通知系统

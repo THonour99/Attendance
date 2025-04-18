@@ -75,6 +75,7 @@ private:
     
     // 工具函数，确保照片URL是完整的
     QString ensureFullPhotoUrl(const QString &photoUrl);
+    void loadAndDisplayPhoto(const QString& photoUrl);
 };
 
 #endif // STUDENTWIDGET_H 
